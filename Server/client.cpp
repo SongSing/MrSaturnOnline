@@ -3,7 +3,7 @@
 Client::Client(int socketId)
 {
     m_name = "???";
-    m_colour = "#000000";
+    m_color = "#000000";
     m_id = -1;
     m_socketId = socketId;
 
@@ -14,11 +14,11 @@ Client::Client(int socketId)
     connect(m_socket, SIGNAL(disconnected()), this, SLOT(socketDisconnected()));
 }
 
-void Client::setInfo(int id, const QString &name, const QString &colour)
+void Client::setInfo(int id, const QString &name, const QString &color)
 {
     m_id = id;
     m_name = name;
-    m_colour = colour;
+    m_color = color;
 }
 
 QString Client::name()
@@ -26,9 +26,9 @@ QString Client::name()
     return m_name;
 }
 
-QString Client::colour()
+QString Client::color()
 {
-    return m_colour;
+    return m_color;
 }
 
 int Client::id()
@@ -66,13 +66,14 @@ void Client::addChannel(Channel *channel)
 
         m_socket->write(c.toByteArray());
 
-        // sending channelId, ids, names, colours
+        // sending channelId, ids, names, colors
 
         Packet p;
         p.begin(Enums::UserListCommand);
         p.write(channel->id(), Enums::ChannelIdLength);
         p.write(channel->clientIds(), Enums::IdListLength, Enums::IdLength);
         p.write(channel->clientNames(), Enums::NameListLength, Enums::NameLength);
+        p.write(channel->clientColors(), Enums::ColorListLength, Enums::ColorLength);
         p.end();
 
         m_socket->write(p.toByteArray());

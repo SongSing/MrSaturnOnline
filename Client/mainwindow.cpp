@@ -14,14 +14,15 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->setupUi(this);
     ui->stackedWidget->setCurrentIndex(0);
-    m_colour = "#FF0000"; // do settings with this later
-    ui->colour->setStyleSheet("background-color:" + m_colour);
+    m_color = "#FF0000"; // do settings with this later
+    ui->color->setStyleSheet("background-color:" + m_color);
 
-    connect(ui->colour, SIGNAL(clicked()), this, SLOT(chooseColour()));
+    connect(ui->color, SIGNAL(clicked()), this, SLOT(chooseColor()));
     connect(ui->connect, SIGNAL(clicked()), this, SLOT(connectToServer()));
     connect(ui->send, SIGNAL(clicked()), this, SLOT(sendMessage()));
     connect(ui->input, SIGNAL(returnPressed()), this, SLOT(sendMessage()));
     connect(ui->channels, SIGNAL(itemDoubleClicked(QListWidgetItem*)), this, SLOT(joinChannel(QListWidgetItem*)));
+    connect(ui->chats, SIGNAL(currentChanged(int)), this, SLOT(currentChanged(int)));
 }
 
 MainWindow::~MainWindow()
@@ -39,14 +40,14 @@ bool MainWindow::hasChannel(Channel c)
     return m_channels.contains(c);
 }
 
-void MainWindow::chooseColour()
+void MainWindow::chooseColor()
 {
-    QColor colour = QColorDialog::getColor(QColor(m_colour), this, "Choose name colour...");
+    QColor color = QColorDialog::getColor(QColor(m_color), this, "Choose name color...");
 
-    if (colour.isValid())
+    if (color.isValid())
     {
-        m_colour = colour.name();
-        ui->colour->setStyleSheet("background-color:" + m_colour);
+        m_color = color.name();
+        ui->color->setStyleSheet("background-color:" + m_color);
     }
 }
 
@@ -90,7 +91,7 @@ void MainWindow::connected()
     Packet p;
     p.begin(Enums::JoinCommand);
     p.write(m_name, Enums::NameLength);
-    p.write(m_colour, Enums::ColourLength);
+    p.write(m_color, Enums::ColorLength);
     p.end();
 
     sendPacket(p);
@@ -110,17 +111,17 @@ void MainWindow::readyRead()
 
         if (command == Enums::MessageCommand)
         {
-            // expecting name, colour, channelId, message
-            QString name, colour, message;
+            // expecting name, color, channelId, message
+            QString name, color, message;
             int channelId;
 
             name = p.readString(Enums::NameLength);
-            colour = p.readString((Enums::ColourLength));
+            color = p.readString((Enums::ColorLength));
             channelId = p.readInt(Enums::ChannelIdLength);
             message = p.readString(Enums::MessageLength);
 
             if (this->hasChannel(channelFromId(channelId)))
-                appendChannel(channelId, tr("<font color='%1'>%2 <b>%3:</b> %4").arg(colour, timestamp(), name, message));
+                appendChannel(channelId, tr("<font color='%1'>%2 <b>%3:</b></font> %4").arg(color, timestamp(), name, message));
         }
         else if (command == Enums::JoinChannelCommand)
         {
@@ -133,6 +134,7 @@ void MainWindow::readyRead()
                 m_channels.append(c);
 
                 QTextBrowser *t = new QTextBrowser();
+                t->setProperty("id", channelId);
                 ui->chats->addTab(t, c.name());
 
                 m_channelMap.insert(channelId, t);
@@ -156,7 +158,7 @@ void MainWindow::readyRead()
         }
         else if (command == Enums::UserListCommand)
         {
-            // expected channelId, list of ids, list of names, list of colours
+            // expected channelId, list of ids, list of names, list of colors
 
             int channelId = p.readInt(Enums::ChannelIdLength);
             Channel c = channelFromId(channelId);
@@ -165,7 +167,7 @@ void MainWindow::readyRead()
             {
                 QList<int> ids = p.readIntList(Enums::IdListLength, Enums::IdLength);
                 QStringList names = p.readStringList(Enums::NameListLength, Enums::NameLength);
-                QStringList colours = p.readStringList(Enums::ColourListLength, Enums::ColourLength);
+                QStringList colors = p.readStringList(Enums::ColorListLength, Enums::ColorLength);
 
                 if (m_userMap.contains(channelId))
                 {
@@ -176,7 +178,7 @@ void MainWindow::readyRead()
 
                 for (int i = 0; i < ids.length(); i++)
                 {
-                    m_userMap[channelId].append(User(ids[i], names[i], colours[i]));
+                    m_userMap[channelId].append(User(ids[i], names[i], colors[i]));
                 }
 
                 if (m_currentChannelId == channelId)
@@ -187,7 +189,7 @@ void MainWindow::readyRead()
         }
         else if (command == Enums::UserJoinedChannelCommand)
         {
-            // expected channelId, id, name, colour
+            // expected channelId, id, name, color
 
             int channelId = p.readInt(Enums::ChannelIdLength);
             Channel c = channelFromId(channelId);
@@ -196,15 +198,23 @@ void MainWindow::readyRead()
             {
                 int id = p.readInt(Enums::IdLength);
                 QString name = p.readString(Enums::NameLength);
-                QString colour = p.readString(Enums::ColourLength);
-                m_userMap[channelId].append(User(id, name, colour));
+                QString color = p.readString(Enums::ColorLength);
+                m_userMap[channelId].append(User(id, name, color));
 
-                appendChannel(channelId, tr("<i>%1 <font color='%2'><b>%3</b></font> joined!</i>").arg(timestamp(), colour, name));
+                if (channelId == m_currentChannelId)
+                {
+                    QListWidgetItem *item = new QListWidgetItem(name);
+                    item->setForeground(QBrush(QColor(color)));
+
+                    ui->users->addItem(item);
+                }
+
+                appendChannel(channelId, tr("<i>%1 <font color='%2'><b>%3</b></font> joined!</i>").arg(timestamp(), color, name));
             }
         }
         else if (command == Enums::UserLeftChannelCommand)
         {
-            // expected channelId, id, name, colour
+            // expected channelId, id, name, color
 
             int channelId = p.readInt(Enums::ChannelIdLength);
             Channel c = channelFromId(channelId);
@@ -213,10 +223,13 @@ void MainWindow::readyRead()
             {
                 int id = p.readInt(Enums::IdLength);
                 QString name = p.readString(Enums::NameLength);
-                QString colour = p.readString(Enums::ColourLength);
-                m_userMap[channelId].removeAll(User(id, name, colour));
+                QString color = p.readString(Enums::ColorLength);
+                m_userMap[channelId].removeAll(User(id, name, color));
 
-                appendChannel(channelId, tr("<i>%1 <font color='%2'><b>%3</b></font> joined!</i>").arg(timestamp(), colour, name));
+                if (channelId == m_currentChannelId)
+                    ui->users->removeItemWidget(ui->users->findItems(name, Qt::MatchFixedString)[0]);
+
+                appendChannel(channelId, tr("<i>%1 <font color='%2'><b>%3</b></font> joined!</i>").arg(timestamp(), color, name));
             }
         }
     }
@@ -254,11 +267,12 @@ void MainWindow::setCurrentChannel(Channel c)
         ui->chats->setCurrentWidget(m_channelMap[c.id()]);
 
         ui->users->clear();
+        QList<User> users = m_userMap[c.id()];
 
-        for (int i = 0; i < m_userMap[c.id()].size(); i++)
+        for (int i = 0; i < users.length(); i++)
         {
-            QListWidgetItem *item = new QListWidgetItem(m_userMap[c.id()][i].name());
-            item->setForeground(QBrush(QColor(m_userMap[c.id()][i].colour())));
+            QListWidgetItem *item = new QListWidgetItem(users[i].name());
+            item->setForeground(QBrush(QColor(users[i].color())));
 
             ui->users->addItem(item);
         }
@@ -298,6 +312,13 @@ void MainWindow::appendChat(const QString &text)
 void MainWindow::appendChannel(int channelId, const QString &text)
 {
     m_channelMap[channelId]->append(text);
+}
+
+void MainWindow::currentChanged(int ind)
+{
+    int id = ui->chats->widget(ind)->property("id").toInt();
+
+    this->setCurrentChannel(channelFromId(id));
 }
 
 Channel MainWindow::channelFromId(int id)

@@ -27,7 +27,7 @@ public:
     bool hasChannel(Channel c);
 
 public slots:
-    void chooseColour();
+    void chooseColor();
     void connectToServer();
     void disconnectFromServer();
     void connected();
@@ -40,10 +40,11 @@ public slots:
     void joinChannel(Channel c);
     void appendChat(const QString &text);
     void appendChannel(int channelId, const QString &text);
+    void currentChanged(int ind);
 
 private:
     Ui::MainWindow *ui;
-    QString m_name, m_colour, m_host;
+    QString m_name, m_color, m_host;
     int m_id, m_port;
     QTcpSocket *m_socket;
     QList<Channel> all_channels;

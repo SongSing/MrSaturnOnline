@@ -20,7 +20,7 @@ public slots:
     void startServer();
     void sendMessage();
     void appendChat(const QString &message);
-    void updateUsers(const QStringList &names, const QStringList &colours);
+    void updateUsers(const QStringList &names, const QStringList &colors);
     void updateChannels(const QStringList &names);
 
 private:

@@ -65,14 +65,14 @@ void MainWindow::appendChat(const QString &message)
     ui->chat->append(message);
 }
 
-void MainWindow::updateUsers(const QStringList &names, const QStringList &colours)
+void MainWindow::updateUsers(const QStringList &names, const QStringList &colors)
 {
     ui->users->clear();
 
     for (int i = 0; i < names.length(); i++)
     {
         QListWidgetItem *item = new QListWidgetItem(names[i]);
-        item->setForeground(QBrush(QColor(colours[i])));
+        item->setForeground(QBrush(QColor(colors[i])));
         item->setFont(QFont(item->font().family(), item->font().pointSize(), 50));
 
         ui->users->addItem(item);

@@ -6,18 +6,18 @@
 class User
 {
 public:
-    User(int id, const QString &name, const QString &colour);
+    User(int id, const QString &name, const QString &color);
 
     bool operator ==(User user);
 
     int id();
     QString name();
-    QString colour();
+    QString color();
 
 private:
     int m_id;
     QString m_name;
-    QString m_colour;
+    QString m_color;
 };
 
 #endif // USER_H

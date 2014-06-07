@@ -15,10 +15,10 @@ class Client : public QObject
 public:
     explicit Client(int socketId);
 
-    void setInfo(int id, const QString &name, const QString &colour);
+    void setInfo(int id, const QString &name, const QString &color);
 
     QString name();
-    QString colour();
+    QString color();
     int id();
     QTcpSocket *socket();
     QList<Channel*> channels();
@@ -42,7 +42,7 @@ private slots:
 
 private:
     QString m_name;
-    QString m_colour;
+    QString m_color;
     int m_socketId, m_id;
     QTcpSocket *m_socket;
     int m_userId;

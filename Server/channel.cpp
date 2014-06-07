@@ -52,6 +52,18 @@ QStringList Channel::clientNames()
     return ret;
 }
 
+QStringList Channel::clientColors()
+{
+    QStringList ret;
+
+    foreach (Client *client, m_clients)
+    {
+        ret << client->color();
+    }
+
+    return ret;
+}
+
 int Channel::id()
 {
     return m_id;
@@ -89,6 +101,16 @@ void Channel::addClient(Client *client)
     {
         m_clients.append(client);
         client->addChannel(this);
+
+        Packet p;
+        p.begin(Enums::UserJoinedChannelCommand);
+        p.write(m_id, Enums::ChannelIdLength);
+        p.write(client->id(), Enums::IdLength);
+        p.write(client->name(), Enums::NameLength);
+        p.write(client->color(), Enums::ColorLength);
+        p.end();
+
+        sendAll(p.toByteArray());
     }
 }
 
@@ -98,5 +120,15 @@ void Channel::removeClient(Client *client)
     {
         m_clients.removeAll(client);
         client->removeChannel(this);
+
+        Packet p;
+        p.begin(Enums::UserLeftChannelCommand);
+        p.write(m_id, Enums::ChannelIdLength);
+        p.write(client->id(), Enums::IdLength);
+        p.write(client->name(), Enums::NameLength);
+        p.write(client->color(), Enums::ColorLength);
+        p.end();
+
+        sendAll(p.toByteArray());
     }
 }

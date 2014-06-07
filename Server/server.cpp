@@ -8,6 +8,8 @@ Server::Server(QObject *parent) :
     m_welcomeMessage = "Hi ho! You come buying?";
     Channel *chan = new Channel(0, "Saturn Valley");
     m_channels.append(chan);
+
+    m_channels.append(new Channel(1, "Saturn Hot Springs"));
 }
 
 void Server::sendAll(const QByteArray &data)
@@ -20,7 +22,17 @@ void Server::sendAll(const QByteArray &data)
 
 void Server::sendOne(Client *client, const QByteArray &data, Channel *channel)
 {
-    channel->sendOne(client, data);
+    if (channel == Channel::all())
+    {
+        foreach (Channel *c, client->channels())
+        {
+            c->sendOne(client, data);
+        }
+    }
+    else
+    {
+        channel->sendOne(client, data);
+    }
 }
 
 void Server::sendChannel(Channel *channel, const QByteArray &data)
@@ -82,36 +94,34 @@ void Server::readyRead()
         Packet p(client->socket()->readLine());
         Enums::Command command = (Enums::Command)p.readCommand();
 
-        debug(QString::number(command) + " - " + client->name());
-
         if (command == Enums::MessageCommand)
         {
             // expecting channelId, message //
-            QString name, message, colour;
+            QString name, message, color;
             int channelId;
 
             name = client->name();
-            colour = client->colour();
+            color = client->color();
             channelId = p.readInt(Enums::ChannelIdLength);
             message = p.readString(Enums::MessageLength);
 
             Channel *channel = channelFromId(channelId);
 
-            debug(tr("[%1] <font color='%2'>%3 <b>%4:</b> %5").arg(channel->name(), colour, timestamp(), name, message));
+            debug(tr("[%1] <font color='%2'>%3 <b>%4:</b> %5").arg(channel->name(), color, timestamp(), name, message));
 
-            sendMessageToAll(message, channel, name, colour);
+            sendMessageToAll(message, channel, name, color);
         }
         else if (command == Enums::JoinCommand)
         {
-            // expecting name, colour //
-            QString name, colour;
+            // expecting name, color //
+            QString name, color;
             int id;
 
             name = p.readString(Enums::NameLength);
-            colour = p.readString(Enums::ColourLength);
+            color = p.readString(Enums::ColorLength);
             id = generateId();
 
-            client->setInfo(id, name, colour);
+            client->setInfo(id, name, color);
             m_clientMap.insert(id, client);
 
             client->sendChannels(m_channels);
@@ -120,7 +130,7 @@ void Server::readyRead()
 
             sendMessageToOne(m_welcomeMessage, client, Channel::all(), "Welcome Message", "#0000FF");
 
-            debug(tr("<i>%1 <font color='%2'><b>%3</b></font> joined!</i>").arg(timestamp(), colour, name));
+            debug(tr("<i>%1 <font color='%2'><b>%3</b></font> joined!</i>").arg(timestamp(), color, name));
         }
         else if (command == Enums::UnjoinCommand)
         {
@@ -143,7 +153,7 @@ void Server::clientDisconnected()
     Client *client = (Client*)sender();
 
     QString name = client->name();
-    QString colour = client->colour();
+    QString color = client->color();
 
     m_clients.removeAll(client);
     m_clientMap.remove(client->id());
@@ -158,7 +168,7 @@ void Server::clientDisconnected()
     Packet p;
     p.begin(Enums::UnjoinCommand);
     p.write(name, Enums::NameLength);
-    p.write(colour, Enums::ColourLength);
+    p.write(color, Enums::ColorLength);
     p.end();
 
     sendAll(p.toByteArray());
@@ -180,12 +190,12 @@ void Server::sendChannelList()
     }
 }
 
-void Server::sendMessageToAll(const QString &message, Channel *channel, const QString &name, const QString &colour)
+void Server::sendMessageToAll(const QString &message, Channel *channel, const QString &name, const QString &color)
 {
     Packet toSend;
     toSend.begin(Enums::MessageCommand);
     toSend.write(name, Enums::NameLength);
-    toSend.write(colour, Enums::ColourLength);
+    toSend.write(color, Enums::ColorLength);
     toSend.write(channel->id(), Enums::ChannelIdLength);
     toSend.write(message, Enums::MessageLength);
     toSend.end();
@@ -193,12 +203,12 @@ void Server::sendMessageToAll(const QString &message, Channel *channel, const QS
     sendChannel(channel, toSend.toByteArray());
 }
 
-void Server::sendMessageToOne(const QString &message, Client *client, Channel *channel, const QString &name, const QString &colour)
+void Server::sendMessageToOne(const QString &message, Client *client, Channel *channel, const QString &name, const QString &color)
 {
     Packet toSend;
     toSend.begin(Enums::MessageCommand);
     toSend.write(name, Enums::NameLength);
-    toSend.write(colour, Enums::ColourLength);
+    toSend.write(color, Enums::ColorLength);
     toSend.write(channel->id(), Enums::ChannelIdLength);
     toSend.write(message, Enums::MessageLength);
     toSend.end();
@@ -221,7 +231,7 @@ void Server::incomingConnection(int socketId)
     debug("New client from: " + client->socket()->peerAddress().toString());
 
     connect(client, SIGNAL(readyRead()), this, SLOT(readyRead()));
-    connect(client, SIGNAL(disconnected()), this, SLOT(disconnected()));
+    connect(client, SIGNAL(disconnected()), this, SLOT(clientDisconnected()));
 }
 
 Channel *Server::channelFromId(int id)

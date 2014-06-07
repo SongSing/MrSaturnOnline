@@ -19,7 +19,7 @@ public:
 
 signals:
     void debug(const QString &message);
-    void usersChanged(QStringList names, QStringList colours);
+    void usersChanged(QStringList names, QStringList colors);
     void channelsChanged(QStringList names);
 
 public slots:
@@ -31,8 +31,8 @@ public slots:
     void clientDisconnected();
     void sendUserList();
     void sendChannelList();
-    void sendMessageToAll(const QString &message, Channel *channel = Channel::all(), const QString &name = "~Server~", const QString &colour = "#000000");
-    void sendMessageToOne(const QString &message, Client *client, Channel *channel, const QString &name = "~Server~", const QString &colour = "#000000");
+    void sendMessageToAll(const QString &message, Channel *channel = Channel::all(), const QString &name = "~Server~", const QString &color = "#000000");
+    void sendMessageToOne(const QString &message, Client *client, Channel *channel, const QString &name = "~Server~", const QString &color = "#000000");
 
     private:
     QList<Client*> m_clients;
