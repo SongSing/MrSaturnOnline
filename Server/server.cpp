@@ -82,6 +82,8 @@ void Server::readyRead()
         Packet p(client->socket()->readLine());
         Enums::Command command = (Enums::Command)p.readCommand();
 
+        debug(QString::number(command) + " - " + client->name());
+
         if (command == Enums::MessageCommand)
         {
             // expecting channelId, message //
@@ -110,10 +112,11 @@ void Server::readyRead()
             id = generateId();
 
             client->setInfo(id, name, colour);
-            this->defaultChannel()->addClient(client);
             m_clientMap.insert(id, client);
 
             client->sendChannels(m_channels);
+
+            this->defaultChannel()->addClient(client);
 
             sendMessageToOne(m_welcomeMessage, client, Channel::all(), "Welcome Message", "#0000FF");
 
@@ -123,6 +126,14 @@ void Server::readyRead()
         {
             // just expecting command here, not really necessary but who knows??? (they can just call disconnectFromHost on their socket)
             client->disconnected();
+        }
+        else if (command == Enums::JoinChannelCommand)
+        {
+            // expecting channel id
+
+            int channelId = p.readInt(Enums::ChannelIdLength);
+
+            channelFromId(channelId)->addClient(client);
         }
     }
 }

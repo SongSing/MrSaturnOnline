@@ -5,6 +5,7 @@
 #include <QTcpSocket>
 #include <QSettings>
 #include <QTextBrowser>
+#include <QListWidgetItem>
 #include "channel.h"
 #include "user.h"
 #include "../lib/enums.h"
@@ -35,6 +36,7 @@ public slots:
     void sendMessage();
     void sendPacket(Packet p);
     void setCurrentChannel(Channel c);
+    void joinChannel(QListWidgetItem *item);
     void joinChannel(Channel c);
     void appendChat(const QString &text);
     void appendChannel(int channelId, const QString &text);

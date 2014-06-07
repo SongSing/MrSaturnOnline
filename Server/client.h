@@ -1,7 +1,7 @@
 #ifndef CLIENT_H
 #define CLIENT_H
 
-#include <QThread>
+#include <QtDebug>
 #include <QTcpSocket>
 #include <QObject>
 

@@ -146,10 +146,12 @@ void MainWindow::readyRead()
             QStringList names = p.readStringList(Enums::ChannelNameListLength, Enums::ChannelNameLength);
 
             all_channels.clear();
+            ui->channels->clear();
 
             for (int i = 0; i < ids.length(); i++)
             {
                 all_channels << Channel(ids[i], names[i]);
+                ui->channels->addItem(names[i]);
             }
         }
         else if (command == Enums::UserListCommand)
@@ -165,11 +167,21 @@ void MainWindow::readyRead()
                 QStringList names = p.readStringList(Enums::NameListLength, Enums::NameLength);
                 QStringList colours = p.readStringList(Enums::ColourListLength, Enums::ColourLength);
 
+                if (m_userMap.contains(channelId))
+                {
+                    m_userMap.remove(channelId);
+                }
+
                 m_userMap[channelId] = QList<User>();
 
                 for (int i = 0; i < ids.length(); i++)
                 {
                     m_userMap[channelId].append(User(ids[i], names[i], colours[i]));
+                }
+
+                if (m_currentChannelId == channelId)
+                {
+                    setCurrentChannel(c);
                 }
             }
         }
@@ -240,7 +252,22 @@ void MainWindow::setCurrentChannel(Channel c)
         m_currentChannelId = c.id();
 
         ui->chats->setCurrentWidget(m_channelMap[c.id()]);
+
+        ui->users->clear();
+
+        for (int i = 0; i < m_userMap[c.id()].size(); i++)
+        {
+            QListWidgetItem *item = new QListWidgetItem(m_userMap[c.id()][i].name());
+            item->setForeground(QBrush(QColor(m_userMap[c.id()][i].colour())));
+
+            ui->users->addItem(item);
+        }
     }
+}
+
+void MainWindow::joinChannel(QListWidgetItem *item)
+{
+    joinChannel(channelFromName(item->text()));
 }
 
 void MainWindow::joinChannel(Channel c)

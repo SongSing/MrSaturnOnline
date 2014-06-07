@@ -8,7 +8,7 @@ Client::Client(int socketId)
     m_socketId = socketId;
 
     m_socket = new QTcpSocket();
-    m_socket->setSocketDescriptor(m_id);
+    m_socket->setSocketDescriptor(socketId);
 
     connect(m_socket, SIGNAL(readyRead()), this, SLOT(socketReadyRead()));
     connect(m_socket, SIGNAL(disconnected()), this, SLOT(socketDisconnected()));
@@ -56,6 +56,15 @@ void Client::addChannel(Channel *channel)
     if (!m_channels.contains(channel))
     {
         m_channels.append(channel);
+
+        // sending id
+
+        Packet c;
+        c.begin(Enums::JoinChannelCommand);
+        c.write(channel->id());
+        c.end();
+
+        m_socket->write(c.toByteArray());
 
         // sending channelId, ids, names, colours
 

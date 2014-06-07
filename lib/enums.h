@@ -10,14 +10,14 @@ public:
     {
         PrintTextCommand = 0x00,
         MessageCommand = 0x01,
-        JoinCommand = 0x01,
-        UnjoinCommand = 0x02,
-        UserListCommand = 0x03,
-        ChannelListCommand = 0x04,
-        JoinChannelCommand = 0x05,
-        UnjoinChannelCommand = 0x06,
-        UserJoinedChannelCommand = 0x07,
-        UserLeftChannelCommand = 0x08
+        JoinCommand = 0x02,
+        UnjoinCommand = 0x03,
+        UserListCommand = 0x04,
+        ChannelListCommand = 0x05,
+        JoinChannelCommand = 0x06,
+        UnjoinChannelCommand = 0x07,
+        UserJoinedChannelCommand = 0x08,
+        UserLeftChannelCommand = 0x09
     };
 
     enum Length // number of bits
