@@ -294,12 +294,9 @@ void Server::setChatImage()
 
     if (file.exists())
     {
-        file.open(QIODevice::ReadOnly);
-        QByteArray image = file.readAll().toBase64();
-
         Packet p;
         p.begin(Enums::SetChatImageCommand);
-        p.write(QString(image), Enums::ChatImageLength);
+        p.writeImage(fileName, Enums::ChatImageLength);
         p.end();
 
         sendAll(p.toByteArray());

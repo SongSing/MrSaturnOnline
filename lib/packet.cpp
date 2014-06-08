@@ -10,6 +10,8 @@
 
 #include "packet.h"
 
+#include <QFile>
+
 Packet::Packet()
     : QString()
 {
@@ -70,6 +72,14 @@ void Packet::write(const QList<int> &list, int bits, int bitsPerItem)
         this->append(QString::number(QString::number(i).length(), 16).rightJustified(bitsPerItem, '0'));
         this->append(QString::number(i));
     }
+}
+
+void Packet::writeImage(const QString &fileName, int bits)
+{
+    QFile file(fileName);
+    file.open(QIODevice::ReadOnly);
+    QString image = QString(file.readAll().toBase64());
+    write(image, bits);
 }
 
 void Packet::end()
@@ -144,6 +154,19 @@ QList<int> Packet::readIntList(int bits, int bitsPerItem)
     }
 
     return ret;
+}
+
+QImage Packet::readImage(int bits)
+{
+    QByteArray imageData = readString(bits).toUtf8();
+    QImage image;
+    image.loadFromData(QByteArray::fromBase64(imageData));
+    return image;
+}
+
+QString Packet::readImageHTML(int bits)
+{
+    return "<img src='" + readString(bits) + "'></img>";
 }
 
 QByteArray Packet::toByteArray()

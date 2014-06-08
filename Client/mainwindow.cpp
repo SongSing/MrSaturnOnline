@@ -182,13 +182,18 @@ void MainWindow::sendMessage()
     {
         ui->input->clear();
 
-        Packet p;
-        p.begin(Enums::MessageCommand);
-        p.write(m_currentChannelId, Enums::ChannelIdLength);
-        p.write(message, Enums::MessageLength);
-        p.end();
+        QStringList lines = message.replace("\r", "").split("\n");
 
-        sendPacket(p);
+        foreach (QString line, lines)
+        {
+            Packet p;
+            p.begin(Enums::MessageCommand);
+            p.write(m_currentChannelId, Enums::ChannelIdLength);
+            p.write(line, Enums::MessageLength);
+            p.end();
+
+            sendPacket(p);
+        }
     }
 }
 
@@ -508,11 +513,9 @@ void MainWindow::handleUserLeftChannel(Packet p)
 
 void MainWindow::handleSetChatImage(Packet p)
 {
-    QByteArray imageData = p.readString(Enums::ChatImageLength).toUtf8();
-    QImage image = QImage::fromData(imageData);
-    image.save("chat.png");
-
-    this->setStyleSheet("QTextBrowser { background-image: url(chat.png); background-repeat: no-repeat; background-attachment: fixed; background-position: center; background-color: white; }");
+    QImage image = p.readImage(Enums::ChatImageLength);
+    image.save(QDir::currentPath() + "/chat.png");
+    this->setStyleSheet("QTextBrowser { background-image: url(\"" + QDir::currentPath() + "/chat.png\"); background-repeat: no-repeat; background-attachment: fixed; background-position: center; background-color: white; }");
 }
 
 // ************************************************** // end command handling // ************************************************** //
