@@ -5,11 +5,13 @@
 Server::Server(QObject *parent) :
     QTcpServer(parent)
 {
-    m_welcomeMessage = "Hi ho! You come buying?";
-    Channel *chan = new Channel(0, "Saturn Valley");
-    m_channels.append(chan);
+    all = Channel::all();
+    mysteryZone = Channel::mysteryZone();
 
-    m_channels.append(new Channel(1, "Saturn Hot Springs"));
+    m_welcomeMessage = "Hi ho! You come buying?";
+
+    createChannel("Saturn Valley", true);
+    createChannel("Saturn Hot Springs", true);
 }
 
 void Server::sendAll(const QByteArray &data)
@@ -22,7 +24,7 @@ void Server::sendAll(const QByteArray &data)
 
 void Server::sendOne(Client *client, const QByteArray &data, Channel *channel)
 {
-    if (channel == Channel::all())
+    if (channel == all)
     {
         foreach (Channel *c, client->channels())
         {
@@ -37,7 +39,7 @@ void Server::sendOne(Client *client, const QByteArray &data, Channel *channel)
 
 void Server::sendChannel(Channel *channel, const QByteArray &data)
 {
-    if (channel == Channel::all())
+    if (channel == all)
     {
         sendAll(data);
     }
@@ -75,14 +77,42 @@ int Server::generateId()
     }
 }
 
+int Server::generateChannelId()
+{
+    if (m_channels.isEmpty())
+    {
+        return 0;
+    }
+    else
+    {
+        int id = m_channelIdMap.size();
+
+        for (int i = 0; i < m_channelIdMap.size(); i++)
+        {
+            if (!m_channelIdMap.contains(i))
+            {
+                id = i;
+                break;
+            }
+        }
+
+        return id;
+    }
+}
+
 Channel *Server::defaultChannel()
 {
     if (m_channels.isEmpty())
     {
-        return Channel::mysteryZone();
+        return mysteryZone;
     }
 
     return m_channels[0];
+}
+
+Channel *Server::allChannels()
+{
+    return all;
 }
 
 void Server::readyRead()
@@ -96,54 +126,31 @@ void Server::readyRead()
 
         if (command == Enums::MessageCommand)
         {
-            // expecting channelId, message //
-            QString name, message, color;
-            int channelId;
-
-            name = client->name();
-            color = client->color();
-            channelId = p.readInt(Enums::ChannelIdLength);
-            message = p.readString(Enums::MessageLength);
-
-            Channel *channel = channelFromId(channelId);
-
-            debug(tr("[%1] <font color='%2'>%3 <b>%4:</b> %5").arg(channel->name(), color, timestamp(), name, message));
-
-            sendMessageToAll(message, channel, name, color);
+            handleMessage(p, client);
         }
         else if (command == Enums::JoinCommand)
         {
-            // expecting name, color //
-            QString name, color;
-            int id;
-
-            name = p.readString(Enums::NameLength);
-            color = p.readString(Enums::ColorLength);
-            id = generateId();
-
-            client->setInfo(id, name, color);
-            m_clientMap.insert(id, client);
-
-            client->sendChannels(m_channels);
-
-            this->defaultChannel()->addClient(client);
-
-            sendMessageToOne(m_welcomeMessage, client, Channel::all(), "Welcome Message", "#0000FF");
-
-            debug(tr("<i>%1 <font color='%2'><b>%3</b></font> joined!</i>").arg(timestamp(), color, name));
+            handleJoin(p, client);
         }
         else if (command == Enums::UnjoinCommand)
         {
-            // just expecting command here, not really necessary but who knows??? (they can just call disconnectFromHost on their socket)
-            client->disconnected();
+            handleUnjoin(p, client);
         }
         else if (command == Enums::JoinChannelCommand)
         {
-            // expecting channel id
-
-            int channelId = p.readInt(Enums::ChannelIdLength);
-
-            channelFromId(channelId)->addClient(client);
+            handleJoinChannel(p, client);
+        }
+        else if (command == Enums::LeaveChannelCommand)
+        {
+            handleUnjoinChannel(p, client);
+        }
+        else if (command == Enums::CreateChannelCommand)
+        {
+            handleCreateChannel(p, client);
+        }
+        else if (command == Enums::RemoveChannelCommand)
+        {
+            handleRemoveChannel(p, client);
         }
     }
 }
@@ -151,6 +158,8 @@ void Server::readyRead()
 void Server::clientDisconnected()
 {
     Client *client = (Client*)sender();
+
+    emit userRemoved(client);
 
     QString name = client->name();
     QString color = client->color();
@@ -165,14 +174,14 @@ void Server::clientDisconnected()
 
     delete client;
 
-    Packet p;
+    /*Packet p;
     p.begin(Enums::UnjoinCommand);
     p.write(name, Enums::NameLength);
     p.write(color, Enums::ColorLength);
     p.end();
 
     sendAll(p.toByteArray());
-    sendUserList();
+    sendUserList();*/
 }
 
 void Server::sendUserList()
@@ -216,6 +225,161 @@ void Server::sendMessageToOne(const QString &message, Client *client, Channel *c
     sendOne(client, toSend.toByteArray(), channel);
 }
 
+Channel *Server::createChannel(const QString &name, bool permanent)
+{
+    if (!m_channelNameMap.contains(name))
+    {
+        int id = generateChannelId();
+        Channel *chan = new Channel(id, name, permanent);
+
+        m_channels.append(chan);
+        m_channelIdMap.insert(id, chan);
+        m_channelNameMap.insert(name, chan);
+
+        emit channelAdded(chan);
+
+        Packet p;
+        p.begin(Enums::CreateChannelCommand);
+        p.write(chan->id(), Enums::ChannelIdLength);
+        p.write(chan->name(), Enums::ChannelNameLength);
+        p.end();
+
+        sendAll(p.toByteArray());
+
+        debug("Channel " + chan->name() + " id " + QString::number(chan->id()) + " created");
+        return chan;
+    }
+
+    return channelFromName(name);
+}
+
+QList<Channel *> Server::channels()
+{
+    return m_channels;
+}
+
+QList<Client *> Server::clients()
+{
+    return m_clients;
+}
+
+void Server::removeChannel(Channel *channel)
+{
+    if (m_channels.contains(channel))
+    {
+        emit channelRemoved(channel);
+
+        m_channels.removeAll(channel);
+        m_channelIdMap.remove(channel->id());
+        m_channelNameMap.remove(channel->name());
+
+        Packet p;
+        p.begin(Enums::RemoveChannelCommand);
+        p.write(channel->id(), Enums::ChannelIdLength);
+        p.write(channel->name(), Enums::ChannelNameLength);
+        p.end();
+
+        sendAll(p.toByteArray());
+
+        delete channel;
+    }
+}
+
+// ************************************************** // command handling // ************************************************** //
+
+void Server::handleMessage(Packet p, Client *client)
+{
+    // expecting channelId, message //
+    QString name, message, color;
+    int channelId;
+
+    name = client->name();
+    color = client->color();
+    channelId = p.readInt(Enums::ChannelIdLength);
+    message = p.readString(Enums::MessageLength);
+
+    Channel *channel = channelFromId(channelId);
+
+    debug(tr("[%1] <font color='%2'>%3 <b>%4:</b></font> %5").arg(channel->name(), color, timestamp(), name, message));
+
+    sendMessageToAll(message, channel, name, color);
+}
+
+void Server::handleJoin(Packet p, Client *client)
+{
+    // expecting name, color //
+    QString name, color;
+    int id;
+
+    name = p.readString(Enums::NameLength);
+    color = p.readString(Enums::ColorLength);
+    id = generateId();
+
+    client->setInfo(id, name, color);
+    m_clientMap.insert(id, client);
+
+    client->sendChannels(m_channels);
+
+    this->defaultChannel()->addClient(client);
+
+    emit userAdded(client);
+
+    sendMessageToOne(m_welcomeMessage, client, all, "Welcome Message", "#0000FF");
+
+    debug(tr("<i>%1 <font color='%2'><b>%3</b></font> joined!</i>").arg(timestamp(), color, name));
+}
+
+void Server::handleUnjoin(Packet p, Client *client)
+{
+    // just expecting command here, not really necessary but who knows??? (they can just call disconnectFromHost on their socket)
+    client->disconnected();
+}
+
+void Server::handleJoinChannel(Packet p, Client *client)
+{
+    // expecting channel id
+    int channelId = p.readInt(Enums::ChannelIdLength);
+    debug(client->name() + " joined " + channelFromId(channelId)->name());
+
+    channelFromId(channelId)->addClient(client);
+}
+
+void Server::handleUnjoinChannel(Packet p, Client *client)
+{
+    // expecting channel id
+    int channelId = p.readInt(Enums::ChannelIdLength);
+    debug(client->name() + " left " + channelFromId(channelId)->name());
+
+    Channel *c = channelFromId(channelId);
+
+    if (c != mysteryZone)
+    {
+        c->removeClient(client);
+
+        if (c->isEmpty() && !c->isPermanent())
+        {
+            removeChannel(c);
+        }
+    }
+}
+
+void Server::handleCreateChannel(Packet p, Client *client)
+{
+    // expecting channel name
+    QString name = p.readString(Enums::ChannelNameLength);
+    Channel *c = createChannel(name);
+    c->addClient(client);
+}
+
+void Server::handleRemoveChannel(Packet p, Client *client)
+{
+    // expecting channel id
+    int channelId = p.readInt(Enums::ChannelIdLength);
+    removeChannel(channelFromId(channelId));
+}
+
+// ************************************************** // end command handling // ************************************************** //
+
 QString Server::timestamp()
 {
     QDateTime now = QDateTime::currentDateTime();
@@ -236,26 +400,20 @@ void Server::incomingConnection(int socketId)
 
 Channel *Server::channelFromId(int id)
 {
-    foreach (Channel *chan, m_channels)
+    if (m_channelIdMap.contains(id))
     {
-        if (chan->id() == id)
-        {
-            return chan;
-        }
+        return m_channelIdMap[id];
     }
 
-    return Channel::mysteryZone();
+    return mysteryZone;
 }
 
 Channel *Server::channelFromName(const QString &name)
 {
-    foreach (Channel *chan, m_channels)
+    if (m_channelNameMap.contains(name))
     {
-        if (chan->name().toLower() == name.toLower())
-        {
-            return chan;
-        }
+        return m_channelNameMap[name];
     }
 
-    return Channel::mysteryZone();
+    return mysteryZone;
 }

@@ -1,11 +1,22 @@
 #include "channel.h"
 #include "client.h"
 
-Channel::Channel(int id, const QString &name) :
+Channel::Channel(int id, const QString &name, bool permanent) :
     QObject()
 {
     m_id = id;
     m_name = name;
+    m_permanent = permanent;
+}
+
+bool Channel::operator ==(Channel *c)
+{
+    return m_id == c->id();
+}
+
+bool Channel::operator ==(Channel c)
+{
+    return m_id == c.id();
 }
 
 Channel *Channel::all() // used for all channels
@@ -21,6 +32,16 @@ Channel *Channel::mysteryZone() // error channel
 QString Channel::name()
 {
     return m_name;
+}
+
+bool Channel::isPermanent()
+{
+    return m_permanent;
+}
+
+bool Channel::isEmpty()
+{
+    return m_clients.isEmpty();
 }
 
 QList<Client *> Channel::clients()
@@ -95,6 +116,17 @@ void Channel::sendOne(Client *client, const QByteArray &data)
     }
 }
 
+void Channel::sendAllButOne(Client *excluded, const QByteArray &data)
+{
+    foreach (Client *client, m_clients)
+    {
+        if (client != excluded)
+        {
+            client->socket()->write(data);
+        }
+    }
+}
+
 void Channel::addClient(Client *client)
 {
     if (!m_clients.contains(client))
@@ -110,7 +142,7 @@ void Channel::addClient(Client *client)
         p.write(client->color(), Enums::ColorLength);
         p.end();
 
-        sendAll(p.toByteArray());
+        sendAllButOne(client, p.toByteArray());
     }
 }
 

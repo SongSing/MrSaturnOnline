@@ -1,5 +1,11 @@
 #include "channel.h"
 
+Channel::Channel()
+{
+    m_id = mysteryZone().id();
+    m_name = mysteryZone().name();
+}
+
 Channel::Channel(int id, const QString &name)
 {
     m_id = id;
@@ -9,6 +15,11 @@ Channel::Channel(int id, const QString &name)
 bool Channel::operator ==(Channel channel)
 {
     return m_id == channel.id();
+}
+
+bool Channel::operator !=(Channel channel)
+{
+    return m_id != channel.id();
 }
 
 Channel Channel::all() // used for all channels

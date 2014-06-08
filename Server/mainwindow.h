@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 #include "server.h"
+#include "client.h"
+#include "channel.h"
 
 namespace Ui {
 class MainWindow;
@@ -20,8 +22,10 @@ public slots:
     void startServer();
     void sendMessage();
     void appendChat(const QString &message);
-    void updateUsers(const QStringList &names, const QStringList &colors);
-    void updateChannels(const QStringList &names);
+    void addUser(Client *client);
+    void removeUser(Client *client);
+    void addChannel(Channel *channel);
+    void removeChannel(Channel *channel);
 
 private:
     Ui::MainWindow *ui;

@@ -30,7 +30,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="page_3">
        <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -289,8 +289,17 @@ Mr. Saturn Online!</string>
          <layout class="QVBoxLayout" name="verticalLayout">
           <item>
            <widget class="QTabWidget" name="chats">
+            <property name="tabShape">
+             <enum>QTabWidget::Triangular</enum>
+            </property>
             <property name="currentIndex">
              <number>-1</number>
+            </property>
+            <property name="tabsClosable">
+             <bool>true</bool>
+            </property>
+            <property name="movable">
+             <bool>true</bool>
             </property>
            </widget>
           </item>
@@ -319,7 +328,7 @@ Mr. Saturn Online!</string>
            </sizepolicy>
           </property>
           <property name="currentIndex">
-           <number>0</number>
+           <number>1</number>
           </property>
           <widget class="QWidget" name="tab">
            <attribute name="title">
@@ -377,6 +386,33 @@ Mr. Saturn Online!</string>
               </property>
              </widget>
             </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_4">
+              <property name="topMargin">
+               <number>0</number>
+              </property>
+              <item>
+               <widget class="QLineEdit" name="channelName">
+                <property name="placeholderText">
+                 <string>Enter channel name...</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="joinChannel">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>Join</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
            </layout>
           </widget>
          </widget>
@@ -393,10 +429,28 @@ Mr. Saturn Online!</string>
      <x>0</x>
      <y>0</y>
      <width>944</width>
-     <height>20</height>
+     <height>26</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menuClient">
+    <property name="title">
+     <string>Client</string>
+    </property>
+    <addaction name="actionDisconnect_from_Server"/>
+    <addaction name="actionExit"/>
+   </widget>
+   <addaction name="menuClient"/>
   </widget>
+  <action name="actionDisconnect_from_Server">
+   <property name="text">
+    <string>Disconnect from Server</string>
+   </property>
+  </action>
+  <action name="actionExit">
+   <property name="text">
+    <string>Exit</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources/>

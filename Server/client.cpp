@@ -61,7 +61,7 @@ void Client::addChannel(Channel *channel)
 
         Packet c;
         c.begin(Enums::JoinChannelCommand);
-        c.write(channel->id());
+        c.write(channel->id(), Enums::ChannelIdLength);
         c.end();
 
         m_socket->write(c.toByteArray());

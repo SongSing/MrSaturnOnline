@@ -15,9 +15,11 @@ public:
         UserListCommand = 0x04,
         ChannelListCommand = 0x05,
         JoinChannelCommand = 0x06,
-        UnjoinChannelCommand = 0x07,
+        LeaveChannelCommand = 0x07,
         UserJoinedChannelCommand = 0x08,
-        UserLeftChannelCommand = 0x09
+        UserLeftChannelCommand = 0x09,
+        CreateChannelCommand = 0x0A,
+        RemoveChannelCommand = 0x0B
     };
 
     enum Length // number of bits

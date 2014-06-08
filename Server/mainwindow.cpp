@@ -31,8 +31,22 @@ void MainWindow::startServer()
 {
     m_server = new Server(this);
     m_server->setWelcomeMessage(ui->welcomeMessage->toPlainText());
+
     connect(m_server, SIGNAL(debug(QString)), this, SLOT(appendChat(QString)));
-    connect(m_server, SIGNAL(usersChanged(QStringList,QStringList)), this, SLOT(updateUsers(QStringList,QStringList)));
+    connect(m_server, SIGNAL(userAdded(Client*)), this, SLOT(addUser(Client*)));
+    connect(m_server, SIGNAL(userRemoved(Client*)), this, SLOT(removeUser(Client*)));
+    connect(m_server, SIGNAL(channelAdded(Channel*)), this, SLOT(addChannel(Channel*)));
+    connect(m_server, SIGNAL(channelRemoved(Channel*)), this, SLOT(removeChannel(Channel*)));
+
+    foreach (Channel *c, m_server->channels())
+    {
+        addChannel(c);
+    }
+
+    foreach (Client *c, m_server->clients())
+    {
+        addUser(c);
+    }
 
     ui->stackedWidget->setCurrentIndex(1);
 
@@ -44,7 +58,7 @@ void MainWindow::startServer()
     }
     else
     {
-        appendChat("<b><font color='red'>Server couldn't be started!</font></b>");
+        appendChat("<b><font color='red'>Server couldn't be started! No buyooooola?</font></b>");
     }
 }
 
@@ -56,7 +70,7 @@ void MainWindow::sendMessage()
     {
         ui->input->clear();
 
-        m_server->sendMessageToAll(message);
+        m_server->sendMessageToAll(message, m_server->allChannels());
     }
 }
 
@@ -65,22 +79,38 @@ void MainWindow::appendChat(const QString &message)
     ui->chat->append(message);
 }
 
-void MainWindow::updateUsers(const QStringList &names, const QStringList &colors)
+void MainWindow::addUser(Client *client)
 {
-    ui->users->clear();
+    QListWidgetItem *item = new QListWidgetItem(client->name());
+    item->setForeground(QBrush(QColor(client->color())));
+    item->setFont(QFont(item->font().family(), item->font().pointSize(), 60));
 
-    for (int i = 0; i < names.length(); i++)
+    ui->users->addItem(item);
+}
+
+void MainWindow::removeUser(Client *client)
+{
+    QList<QListWidgetItem*> items = ui->users->findItems(client->name(), Qt::MatchCaseSensitive);
+
+    foreach (QListWidgetItem *item, items)
     {
-        QListWidgetItem *item = new QListWidgetItem(names[i]);
-        item->setForeground(QBrush(QColor(colors[i])));
-        item->setFont(QFont(item->font().family(), item->font().pointSize(), 50));
-
-        ui->users->addItem(item);
+        ui->users->removeItemWidget(item);
+        delete item;
     }
 }
 
-void MainWindow::updateChannels(const QStringList &names)
+void MainWindow::addChannel(Channel *channel)
 {
-    ui->channels->clear();
-    ui->channels->addItems(names);
+    ui->channels->addItem(channel->name());
+}
+
+void MainWindow::removeChannel(Channel *channel)
+{
+    QList<QListWidgetItem*> items = ui->channels->findItems(channel->name(), Qt::MatchCaseSensitive);
+
+    foreach (QListWidgetItem *item, items)
+    {
+        ui->channels->removeItemWidget(item);
+        delete item;
+    }
 }
