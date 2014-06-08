@@ -16,11 +16,11 @@ public:
     explicit Client(int socketId);
 
     void setInfo(int id, const QString &name, const QString &color);
+    void setType(bool isWeb);
 
     QString name();
     QString color();
     int id();
-    QTcpSocket *socket();
     QList<Channel*> channels();
 
     bool hasChannel(Channel *channel);
@@ -35,6 +35,7 @@ signals:
 
 public slots:
     void sendChannels(QList<Channel*> channels);
+    void write(const QByteArray &data);
 
 private slots:
     void socketReadyRead();
@@ -44,9 +45,10 @@ private:
     QString m_name;
     QString m_color;
     int m_socketId, m_id;
-    QTcpSocket *m_socket;
+    QObject *m_socket;
     int m_userId;
     QList<Channel*> m_channels;
+    bool m_isWeb;
 
 };
 

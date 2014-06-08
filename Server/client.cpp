@@ -1,5 +1,6 @@
 #include "client.h"
 
+
 Client::Client(int socketId)
 {
     m_name = "???";
@@ -21,6 +22,14 @@ void Client::setInfo(int id, const QString &name, const QString &color)
     m_color = color;
 }
 
+void Client::setType(bool isWeb)
+{
+    if (isWeb)
+    {
+        m_socket = new QWebSocket
+    }
+}
+
 QString Client::name()
 {
     return m_name;
@@ -36,7 +45,7 @@ int Client::id()
     return m_id;
 }
 
-QTcpSocket *Client::socket()
+QAbstractSocket *Client::socket()
 {
     return m_socket;
 }
@@ -110,6 +119,11 @@ void Client::sendChannels(QList<Channel *> channels)
     p.end();
 
     m_socket->write(p.toByteArray());
+}
+
+void Client::write(const QByteArray &data)
+{
+
 }
 
 void Client::socketReadyRead()

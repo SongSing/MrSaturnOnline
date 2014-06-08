@@ -7,7 +7,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
-    // mibu is gay
+    // mibu is gay hahas songsing is so angry
     QCoreApplication::setOrganizationName("Team Zesty");
     QCoreApplication::setApplicationName("Mr. Saturn Online Server");
     QApplication::setStyle("Fusion");

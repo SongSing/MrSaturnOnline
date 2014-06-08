@@ -1,5 +1,6 @@
 #include "server.h"
 
+#include <QCryptographicHash>
 #include <QDateTime>
 #include <QFileDialog>
 
@@ -124,6 +125,8 @@ void Server::readyRead()
     while (client->socket()->canReadLine())
     {
         Packet p(client->socket()->readLine());
+
+        debug(p);
         Enums::Command command = (Enums::Command)p.readCommand();
 
         if (command == Enums::MessageCommand)
@@ -153,6 +156,27 @@ void Server::readyRead()
         else if (command == Enums::RemoveChannelCommand)
         {
             handleRemoveChannel(p, client);
+        }
+        else if (p.startsWith("c-WebSocket-Key: ")) // lazy
+        {
+            /*
+              HTTP/1.1 101 Switching Protocols
+              Upgrade: websocket
+              Connection: Upgrade
+              Sec-WebSocket-Accept: HSmrc0sMlYUkAGmm5OPpG2HaGWk=
+              Sec-WebSocket-Protocol: chat
+            */
+
+            QString key = p.mid(17).trimmed();
+            key += "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"; // magic string
+            QCryptographicHash hash(QCryptographicHash::Sha1);
+            hash.addData(key.toUtf8());
+            key = QString(hash.result().toBase64());
+
+            QString response = QString("HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: %1\r\n\r\n")
+                    .arg(key);
+
+            client->socket()->write(response.toUtf8());
         }
     }
 }
