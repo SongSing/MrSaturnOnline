@@ -167,6 +167,10 @@ void MainWindow::readyRead()
         {
             handleRemoveChannel(p);
         }
+        else if (command == Enums::SetChatImageCommand)
+        {
+            handleSetChatImage(p);
+        }
     }
 }
 
@@ -500,6 +504,15 @@ void MainWindow::handleUserLeftChannel(Packet p)
 
         appendChannel(channelId, tr("<i>%1 <font color='%2'><b>%3</b></font> left the channel!</i>").arg(timestamp(), color, name));
     }
+}
+
+void MainWindow::handleSetChatImage(Packet p)
+{
+    QByteArray imageData = p.readString(Enums::ChatImageLength).toUtf8();
+    QImage image = QImage::fromData(imageData);
+    image.save("chat.png");
+
+    this->setStyleSheet("QTextBrowser { background-image: url(chat.png); background-repeat: no-repeat; background-attachment: fixed; background-position: center; background-color: white; }");
 }
 
 // ************************************************** // end command handling // ************************************************** //

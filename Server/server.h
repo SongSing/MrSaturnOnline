@@ -43,6 +43,7 @@ public slots:
     void sendMessageToAll(const QString &message, Channel *channel, const QString &name = "~Server~", const QString &color = "#000000");
     void sendMessageToOne(const QString &message, Client *client, Channel *channel, const QString &name = "~Server~", const QString &color = "#000000");
     void removeChannel(Channel *channel);
+    void setChatImage();
 
     // command handling //
     void handleMessage(Packet p, Client *client);
@@ -64,6 +65,7 @@ private:
     Channel *channelFromId(int id);
     Channel *channelFromName(const QString &name);
     Channel *all, *mysteryZone;
+    QWidget *m_parent;
 
 protected:
     void incomingConnection(int socketId);

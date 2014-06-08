@@ -31,6 +31,7 @@ void MainWindow::startServer()
 {
     m_server = new Server(this);
     m_server->setWelcomeMessage(ui->welcomeMessage->toPlainText());
+    connect(ui->actionSet_Chat_Background, SIGNAL(triggered()), m_server, SLOT(setChatImage()));
 
     connect(m_server, SIGNAL(debug(QString)), this, SLOT(appendChat(QString)));
     connect(m_server, SIGNAL(userAdded(Client*)), this, SLOT(addUser(Client*)));

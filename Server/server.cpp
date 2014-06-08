@@ -1,10 +1,12 @@
 #include "server.h"
 
 #include <QDateTime>
+#include <QFileDialog>
 
 Server::Server(QObject *parent) :
     QTcpServer(parent)
 {
+    m_parent = (QWidget*)parent;
     all = Channel::all();
     mysteryZone = Channel::mysteryZone();
 
@@ -282,6 +284,25 @@ void Server::removeChannel(Channel *channel)
         sendAll(p.toByteArray());
 
         delete channel;
+    }
+}
+
+void Server::setChatImage()
+{
+    QString fileName = QFileDialog::getOpenFileName(m_parent, "Choose image...", QString(), tr("Image Files (*.png *.jpg *.bmp)"));
+    QFile file(fileName);
+
+    if (file.exists())
+    {
+        file.open(QIODevice::ReadOnly);
+        QByteArray image = file.readAll().toBase64();
+
+        Packet p;
+        p.begin(Enums::SetChatImageCommand);
+        p.write(QString(image), Enums::ChatImageLength);
+        p.end();
+
+        sendAll(p.toByteArray());
     }
 }
 
