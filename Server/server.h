@@ -2,16 +2,17 @@
 #define SERVER_H
 
 #include <QTcpServer>
+#include <QWebSocketServer>
 #include "client.h"
 #include "channel.h"
 #include "../lib/enums.h"
 #include "../lib/packet.h"
 
-class Server : public QTcpServer
+class Server : public QWebSocketServer
 {
     Q_OBJECT
 public:
-    explicit Server(QObject *parent = 0);
+    explicit Server(const QString &name = "MrSaturnOnline", SslMode mode = SslMode::NonSecureMode, QObject *parent = 0);
     void sendCash(double amount, QObject doctor);
     int generateId();
     int generateChannelId();
@@ -36,7 +37,7 @@ public slots:
     void sendOne(Client *client, const QByteArray &data, Channel *channel = Channel::all());
     void sendChannel(Channel *channel, const QByteArray &data);
     void setWelcomeMessage(const QString &message);
-    void readyRead();
+    void readyRead(const QString &message);
     void clientDisconnected();
     void sendUserList();
     void sendChannelList();
@@ -54,6 +55,8 @@ public slots:
     void handleCreateChannel(Packet p, Client *client);
     void handleRemoveChannel(Packet p, Client *client);
 
+    void onNewConnection();
+
 private:
     QList<Client*> m_clients;
     QList<Channel*> m_channels;
@@ -68,7 +71,6 @@ private:
     QWidget *m_parent;
 
 protected:
-    void incomingConnection(int socketId);
 
 };
 

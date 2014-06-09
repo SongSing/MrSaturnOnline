@@ -7,7 +7,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
-    // mibu is gay hahas songsing is so angry
+    // mibu is gay hahas songsing is so angry HES GAY
     QCoreApplication::setOrganizationName("Team Zesty");
     QCoreApplication::setApplicationName("Mr. Saturn Online Server");
     QApplication::setStyle("Fusion");
@@ -29,7 +29,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::startServer()
 {
-    m_server = new Server(this);
+    m_server = new Server("Mr. Saturn Online", QWebSocketServer::NonSecureMode, this);
     m_server->setWelcomeMessage(ui->welcomeMessage->toPlainText());
     connect(ui->actionSet_Chat_Background, SIGNAL(triggered()), m_server, SLOT(setChatImage()));
 

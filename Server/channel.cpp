@@ -94,7 +94,7 @@ void Channel::sendAll(const QByteArray &data)
 {
     foreach (Client *client, m_clients)
     {
-        client->socket()->write(data);
+        client->write(data);
     }
 }
 
@@ -111,7 +111,7 @@ void Channel::sendOne(Client *client, const QByteArray &data)
     {
         if (m_clients.contains(client))
         {
-            client->socket()->write(data);
+            client->write(data);
         }
     }
 }
@@ -122,7 +122,7 @@ void Channel::sendAllButOne(Client *excluded, const QByteArray &data)
     {
         if (client != excluded)
         {
-            client->socket()->write(data);
+            client->write(data);
         }
     }
 }

@@ -6,6 +6,7 @@
 #include <QSettings>
 #include <QTextBrowser>
 #include <QListWidgetItem>
+#include <QWebSocket>
 #include "channel.h"
 #include "user.h"
 #include "../lib/enums.h"
@@ -32,7 +33,7 @@ public slots:
     void disconnectFromServer();
     void connected();
     void disconnected();
-    void readyRead();
+    void readyRead(const QString &message);
     void sendMessage();
     void sendPacket(Packet p);
     void setCurrentChannel(Channel c);
@@ -61,7 +62,7 @@ private:
     Ui::MainWindow *ui;
     QString m_name, m_color, m_host;
     int m_id, m_port;
-    QTcpSocket *m_socket;
+    QWebSocket *m_socket;
     QList<Channel> all_channels;
     QList<Channel> m_channels;
     int m_currentChannelId;

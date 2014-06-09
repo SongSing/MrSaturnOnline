@@ -1,17 +1,17 @@
 #include "client.h"
 
 
-Client::Client(int socketId)
+Client::Client(QWebSocket *socket)
 {
     m_name = "???";
     m_color = "#000000";
     m_id = -1;
-    m_socketId = socketId;
+    //m_socketId = socket->;
 
-    m_socket = new QTcpSocket();
-    m_socket->setSocketDescriptor(socketId);
+    m_socket = socket;
 
-    connect(m_socket, SIGNAL(readyRead()), this, SLOT(socketReadyRead()));
+    // wire these through client slots instead of signals so the sender can be a client object //
+    connect(m_socket, SIGNAL(textMessageReceived(QString)), this, SLOT(socketReadyRead(QString)));
     connect(m_socket, SIGNAL(disconnected()), this, SLOT(socketDisconnected()));
 }
 
@@ -20,14 +20,6 @@ void Client::setInfo(int id, const QString &name, const QString &color)
     m_id = id;
     m_name = name;
     m_color = color;
-}
-
-void Client::setType(bool isWeb)
-{
-    if (isWeb)
-    {
-        m_socket = new QWebSocket
-    }
 }
 
 QString Client::name()
@@ -45,7 +37,7 @@ int Client::id()
     return m_id;
 }
 
-QAbstractSocket *Client::socket()
+QWebSocket *Client::socket()
 {
     return m_socket;
 }
@@ -73,7 +65,7 @@ void Client::addChannel(Channel *channel)
         c.write(channel->id(), Enums::ChannelIdLength);
         c.end();
 
-        m_socket->write(c.toByteArray());
+        write(c.toByteArray());
 
         // sending channelId, ids, names, colors
 
@@ -85,7 +77,7 @@ void Client::addChannel(Channel *channel)
         p.write(channel->clientColors(), Enums::ColorListLength, Enums::ColorLength);
         p.end();
 
-        m_socket->write(p.toByteArray());
+        write(p.toByteArray());
     }
 }
 
@@ -118,17 +110,17 @@ void Client::sendChannels(QList<Channel *> channels)
     p.write(names, Enums::ChannelNameListLength, Enums::ChannelNameLength);
     p.end();
 
-    m_socket->write(p.toByteArray());
+    write(p.toByteArray());
 }
 
 void Client::write(const QByteArray &data)
 {
-
+    m_socket->sendTextMessage(QString(data));
 }
 
-void Client::socketReadyRead()
+void Client::socketReadyRead(const QString &message)
 {
-    emit readyRead();
+    emit readyRead(message);
 }
 
 void Client::socketDisconnected()

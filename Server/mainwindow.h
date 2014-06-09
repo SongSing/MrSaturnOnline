@@ -2,6 +2,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QWebSocketServer>
+#include <QWebSocket>
 #include "server.h"
 #include "client.h"
 #include "channel.h"

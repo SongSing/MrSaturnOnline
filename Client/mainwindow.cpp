@@ -78,19 +78,19 @@ void MainWindow::connectToServer()
 
     ui->stackedWidget->setCurrentIndex(1);
 
-    m_socket = new QTcpSocket(this);
+    m_socket = new QWebSocket();
 
     connect(m_socket, SIGNAL(connected()), this, SLOT(connected()));
     connect(m_socket, SIGNAL(disconnected()), this, SLOT(disconnected()));
-    connect(m_socket, SIGNAL(readyRead()), this, SLOT(readyRead()));
+    connect(m_socket, SIGNAL(textMessageReceived(QString)), this, SLOT(readyRead(QString)));
 
-    //ui->chat->append("<i>Connecting to " + m_host + " on port " + QString::number(m_port) + "...");
-    m_socket->connectToHost(m_host, m_port);
+    appendChat("<i>Connecting to " + m_host + " on port " + QString::number(m_port) + "...");
+    m_socket->open("ws://" + m_host + ":" + QString::number(m_port));
 }
 
 void MainWindow::disconnectFromServer()
 {
-    m_socket->disconnectFromHost();
+    m_socket->close();
     ui->stackedWidget->setCurrentIndex(0);
 
     for (int i = 0; i < ui->chats->count(); i++)
@@ -124,53 +124,50 @@ void MainWindow::disconnected()
     appendChat("<b>Disconnected from Server!</b>");
 }
 
-void MainWindow::readyRead()
+void MainWindow::readyRead(const QString &message)
 {
-    while (m_socket->canReadLine())
-    {
-        Packet p(m_socket->readLine());
-        Enums::Command command = (Enums::Command)p.readCommand();
+    Packet p(message);
+    Enums::Command command = (Enums::Command)p.readCommand();
 
-        if (command == Enums::MessageCommand)
-        {
-            handleMessage(p);
-        }
-        else if (command == Enums::JoinCommand)
-        {
-            handleJoin(p);
-        }
-        else if (command == Enums::JoinChannelCommand)
-        {
-            handleJoinChannel(p);
-        }
-        else if (command == Enums::ChannelListCommand)
-        {
-            handleChannelList(p);
-        }
-        else if (command == Enums::UserListCommand)
-        {
-            handleUserList(p);
-        }
-        else if (command == Enums::UserJoinedChannelCommand)
-        {
-            handleUserJoinedChannel(p);
-        }
-        else if (command == Enums::UserLeftChannelCommand)
-        {
-            handleUserLeftChannel(p);
-        }
-        else if (command == Enums::CreateChannelCommand)
-        {
-            handleAddChannel(p);
-        }
-        else if (command == Enums::RemoveChannelCommand)
-        {
-            handleRemoveChannel(p);
-        }
-        else if (command == Enums::SetChatImageCommand)
-        {
-            handleSetChatImage(p);
-        }
+    if (command == Enums::MessageCommand)
+    {
+        handleMessage(p);
+    }
+    else if (command == Enums::JoinCommand)
+    {
+        handleJoin(p);
+    }
+    else if (command == Enums::JoinChannelCommand)
+    {
+        handleJoinChannel(p);
+    }
+    else if (command == Enums::ChannelListCommand)
+    {
+        handleChannelList(p);
+    }
+    else if (command == Enums::UserListCommand)
+    {
+        handleUserList(p);
+    }
+    else if (command == Enums::UserJoinedChannelCommand)
+    {
+        handleUserJoinedChannel(p);
+    }
+    else if (command == Enums::UserLeftChannelCommand)
+    {
+        handleUserLeftChannel(p);
+    }
+    else if (command == Enums::CreateChannelCommand)
+    {
+        handleAddChannel(p);
+    }
+    else if (command == Enums::RemoveChannelCommand)
+    {
+        handleRemoveChannel(p);
+    }
+    else if (command == Enums::SetChatImageCommand)
+    {
+        handleSetChatImage(p);
     }
 }
 
@@ -199,7 +196,7 @@ void MainWindow::sendMessage()
 
 void MainWindow::sendPacket(Packet p)
 {
-    m_socket->write(p.toByteArray()); // use toByteArray instead of other things
+    m_socket->sendTextMessage(p); // haha we're texting the server
 }
 
 void MainWindow::setCurrentChannel(Channel c)
