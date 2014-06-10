@@ -13,6 +13,40 @@
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">QLabel
+{
+	color:white;
+}
+
+#page_3, #page, #tab, #tab_2
+{
+	background: rgba(53,106,160,255);
+}
+
+#chats QTabPage
+{
+	background:rgba(255,255,255,200);
+}
+
+#frame
+{
+	border:1px solid black;
+	border-radius:4px;
+	position:absolute;
+	top:16px;
+	bottom:16px;
+	right:16px;
+	width:512px;
+	
+	background:rgba(255, 255, 255, 0.5);
+}
+
+#frame QLabel
+{
+	color:black;
+}</string>
+  </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QVBoxLayout" name="verticalLayout_2">
     <property name="leftMargin">
@@ -30,7 +64,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="page_3">
        <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -295,6 +329,9 @@ Mr. Saturn Online!</string>
             <property name="currentIndex">
              <number>-1</number>
             </property>
+            <property name="documentMode">
+             <bool>true</bool>
+            </property>
             <property name="tabsClosable">
              <bool>true</bool>
             </property>
@@ -329,6 +366,9 @@ Mr. Saturn Online!</string>
           </property>
           <property name="currentIndex">
            <number>1</number>
+          </property>
+          <property name="documentMode">
+           <bool>true</bool>
           </property>
           <widget class="QWidget" name="tab">
            <attribute name="title">

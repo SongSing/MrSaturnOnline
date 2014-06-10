@@ -173,7 +173,14 @@ void Server::clientDisconnected()
     foreach (Channel *channel, client->channels())
     {
         channel->removeClient(client);
+
+        if (channel->isEmpty() && !channel->isPermanent())
+        {
+            removeChannel(channel);
+        }
     }
+
+    debug(tr("<i>%1 <font color='%2'><b>%3</b></font> left!</i>").arg(timestamp(), color, name.toHtmlEscaped()));
 
     delete client;
 
@@ -345,7 +352,7 @@ void Server::handleJoin(Packet p, Client *client)
 
     sendMessageToOne(m_welcomeMessage, client, all, "Welcome Message", "#0000FF");
 
-    debug(tr("<i>%1 <font color='%2'><b>%3</b></font> joined!</i>").arg(timestamp(), color, name));
+    debug(tr("<i>%1 <font color='%2'><b>%3</b></font> joined!</i>").arg(timestamp(), color, name.toHtmlEscaped()));
 }
 
 void Server::handleUnjoin(Packet p, Client *client)
@@ -358,7 +365,7 @@ void Server::handleJoinChannel(Packet p, Client *client)
 {
     // expecting channel id
     int channelId = p.readInt(Enums::ChannelIdLength);
-    debug(client->name() + " joined " + channelFromId(channelId)->name());
+    debug(client->name() + " joined " + channelFromId(channelId)->name() + ".");
 
     channelFromId(channelId)->addClient(client);
 }
@@ -367,7 +374,7 @@ void Server::handleUnjoinChannel(Packet p, Client *client)
 {
     // expecting channel id
     int channelId = p.readInt(Enums::ChannelIdLength);
-    debug(client->name() + " left " + channelFromId(channelId)->name());
+    debug(client->name() + " left " + channelFromId(channelId)->name() + ".");
 
     Channel *c = channelFromId(channelId);
 
