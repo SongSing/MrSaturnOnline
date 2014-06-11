@@ -20,7 +20,8 @@ public:
         UserLeftChannelCommand = 0x09,
         CreateChannelCommand = 0x0A,
         RemoveChannelCommand = 0x0B,
-        SetChatImageCommand = 0x0C
+        SetChatImageCommand = 0x0C,
+        ImageCommand = 0x0D
     };
 
     enum Length // number of bits
@@ -37,7 +38,8 @@ public:
         ChannelIdListLength = 8,
         ChannelNameLength = 2,
         ChannelNameListLength = 8,
-        ChatImageLength = 16
+        ChatImageLength = 16,
+        ImageLength = 16
     };
 };
 

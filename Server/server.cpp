@@ -131,6 +131,10 @@ void Server::readyRead(const QString &message)
     {
         handleMessage(p, client);
     }
+    else if (command == Enums::ImageCommand)
+    {
+        handleImage(p, client);
+    }
     else if (command == Enums::JoinCommand)
     {
         handleJoin(p, client);
@@ -329,6 +333,32 @@ void Server::handleMessage(Packet p, Client *client)
     debug(tr("[%1] <font color='%2'>%3 <b>%4:</b></font> %5").arg(channel->name(), color, timestamp(), name, message));
 
     sendMessageToAll(message, channel, name, color);
+}
+
+void Server::handleImage(Packet p, Client *client)
+{
+    QString name, message, color;
+    int channelId;
+
+    name = client->name();
+    color = client->color();
+    channelId = p.readInt(Enums::ChannelIdLength);
+    message = p.readString(Enums::ImageLength);
+
+    Channel *channel = channelFromId(channelId);
+
+    Packet s;
+    s.begin(Enums::ImageCommand);
+    s.write(name, Enums::NameLength);
+    s.write(color, Enums::ColorLength);
+    s.write(channelId, Enums::ChannelIdLength);
+    s.write(message, Enums::ImageLength);
+    s.end();
+
+    sendChannel(channel, s.toByteArray());
+
+    debug(tr("[%1] <font color='%2'>%3 <b>%4:</b></font> %5")
+          .arg(channel->name(), color, timestamp(), name.toHtmlEscaped(), message.replace("[", "<").replace("]", ">")));
 }
 
 void Server::handleJoin(Packet p, Client *client)
