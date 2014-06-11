@@ -25,3 +25,6 @@ HEADERS  += mainwindow.h \
     ../lib/packet.h
 
 FORMS    += mainwindow.ui
+
+RESOURCES += \
+    Images.qrc

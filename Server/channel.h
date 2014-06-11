@@ -27,6 +27,7 @@ public:
     QList<int> clientIds();
     QStringList clientNames();
     QStringList clientColors();
+    QList<int> clientSprites();
 
 signals:
 

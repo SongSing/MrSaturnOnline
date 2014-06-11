@@ -85,6 +85,18 @@ QStringList Channel::clientColors()
     return ret;
 }
 
+QList<int> Channel::clientSprites()
+{
+    QList<int> ret;
+
+    foreach (Client *client, m_clients)
+    {
+        ret << client->sprite();
+    }
+
+    return ret;
+}
+
 int Channel::id()
 {
     return m_id;
@@ -140,6 +152,7 @@ void Channel::addClient(Client *client)
         p.write(client->id(), Enums::IdLength);
         p.write(client->name(), Enums::NameLength);
         p.write(client->color(), Enums::ColorLength);
+        p.write(client->sprite(), Enums::SpriteLength);
         p.end();
 
         sendAllButOne(client, p.toByteArray());

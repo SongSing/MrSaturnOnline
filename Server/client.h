@@ -15,11 +15,12 @@ class Client : public QObject
 public:
     explicit Client(QWebSocket *socket);
 
-    void setInfo(int id, const QString &name, const QString &color);
+    void setInfo(int id, const QString &name, const QString &color, int sprite);
 
     QString name();
     QString color();
     int id();
+    int sprite();
     QList<Channel*> channels();
 
     QWebSocket *socket();
@@ -45,9 +46,8 @@ private slots:
 private:
     QString m_name;
     QString m_color;
-    int m_socketId, m_id;
+    int m_socketId, m_id, m_sprite;
     QWebSocket *m_socket;
-    int m_userId;
     QList<Channel*> m_channels;
     bool m_isWeb;
 

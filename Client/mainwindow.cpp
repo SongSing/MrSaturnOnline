@@ -133,6 +133,10 @@ void MainWindow::readyRead(const QString &message)
     {
         handleMessage(p);
     }
+    else if (command == Enums::ImageCommand)
+    {
+        handleImage(p);
+    }
     else if (command == Enums::JoinCommand)
     {
         handleJoin(p);
@@ -339,6 +343,24 @@ void MainWindow::handleMessage(Packet p)
     {
         appendChannel(channelId, tr("<font color='%1'>%2 <b>%3:</b></font> %4")
                       .arg(color, timestamp(), name.toHtmlEscaped(), message.toHtmlEscaped()));
+    }
+}
+
+void MainWindow::handleImage(Packet p)
+{
+    // expecting name, color, channelId, message
+    QString name, color, message;
+    int channelId;
+
+    name = p.readString(Enums::NameLength);
+    color = p.readString((Enums::ColorLength));
+    channelId = p.readInt(Enums::ChannelIdLength);
+    message = p.readString(Enums::ImageLength);
+
+    if (this->hasChannel(channelFromId(channelId)))
+    {
+        appendChannel(channelId, tr("<font color='%1'>%2 <b>%3:</b></font> %4")
+                      .arg(color, timestamp(), name.toHtmlEscaped(), message.toHtmlEscaped().replace("[", "<").replace("]", ">")));
     }
 }
 

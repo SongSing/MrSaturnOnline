@@ -6,7 +6,7 @@ Client::Client(QWebSocket *socket)
     m_name = "???";
     m_color = "#000000";
     m_id = -1;
-    //m_socketId = socket->;
+    m_sprite = 0;
 
     m_socket = socket;
 
@@ -15,11 +15,12 @@ Client::Client(QWebSocket *socket)
     connect(m_socket, SIGNAL(disconnected()), this, SLOT(socketDisconnected()));
 }
 
-void Client::setInfo(int id, const QString &name, const QString &color)
+void Client::setInfo(int id, const QString &name, const QString &color, int sprite)
 {
     m_id = id;
     m_name = name;
     m_color = color;
+    m_sprite = sprite;
 }
 
 QString Client::name()
@@ -35,6 +36,11 @@ QString Client::color()
 int Client::id()
 {
     return m_id;
+}
+
+int Client::sprite()
+{
+    return m_sprite;
 }
 
 QWebSocket *Client::socket()
@@ -75,6 +81,7 @@ void Client::addChannel(Channel *channel)
         p.write(channel->clientIds(), Enums::IdListLength, Enums::IdLength);
         p.write(channel->clientNames(), Enums::NameListLength, Enums::NameLength);
         p.write(channel->clientColors(), Enums::ColorListLength, Enums::ColorLength);
+        p.write(channel->clientSprites(), Enums::SpriteListLength, Enums::SpriteLength);
         p.end();
 
         write(p.toByteArray());

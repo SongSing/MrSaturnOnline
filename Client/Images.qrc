@@ -1,0 +1,20 @@
+<RCC>
+    <qresource prefix="/images">
+        <file>sprites/0.png</file>
+        <file>sprites/1.png</file>
+        <file>sprites/2.png</file>
+        <file>sprites/3.png</file>
+        <file>sprites/4.png</file>
+        <file>sprites/5.png</file>
+        <file>sprites/6.png</file>
+        <file>sprites/7.png</file>
+        <file>sprites/8.png</file>
+        <file>sprites/9.png</file>
+        <file>sprites/10.png</file>
+        <file>sprites/11.png</file>
+        <file>sprites/12.png</file>
+        <file>sprites/13.png</file>
+        <file>sprites/14.png</file>
+        <file>sprites/15.png</file>
+    </qresource>
+</RCC>

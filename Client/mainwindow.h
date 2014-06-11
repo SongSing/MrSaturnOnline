@@ -48,6 +48,7 @@ public slots:
 
     // command handling //
     void handleMessage(Packet p);
+    void handleImage(Packet p);
     void handleJoin(Packet p);
     void handleJoinChannel(Packet p);
     void handleChannelList(Packet p);

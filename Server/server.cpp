@@ -31,10 +31,7 @@ void Server::sendOne(Client *client, const QByteArray &data, Channel *channel)
 {
     if (channel == all)
     {
-        foreach (Channel *c, client->channels())
-        {
-            c->sendOne(client, data);
-        }
+        client->channels()[0]->sendOne(client, data); // handles it there
     }
     else
     {
@@ -363,15 +360,18 @@ void Server::handleImage(Packet p, Client *client)
 
 void Server::handleJoin(Packet p, Client *client)
 {
-    // expecting name, color //
+    // expecting name, color, sprite //
     QString name, color;
-    int id;
+    int id, sprite;
+
+    debug(p);
 
     name = p.readString(Enums::NameLength);
     color = p.readString(Enums::ColorLength);
+    sprite = p.readInt(Enums::SpriteLength);
     id = generateId();
 
-    client->setInfo(id, name, color);
+    client->setInfo(id, name, color, sprite);
     m_clientMap.insert(id, client);
 
     client->sendChannels(m_channels);
