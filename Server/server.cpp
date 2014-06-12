@@ -176,7 +176,7 @@ void Server::clientDisconnected()
 {
     Client *client = (Client*)sender();
 
-    delete client->socket();
+    QString ip = client->ip();
 
     emit userRemoved(client);
 
@@ -185,14 +185,8 @@ void Server::clientDisconnected()
 
     m_clients.removeAll(client);
     m_clientMap.remove(client->id());
-    QString ip = client->ip();
 
     m_ipMap[ip].removeAll(client);
-
-    if (m_ipMap[ip].isEmpty())
-    {
-        m_ipMap.remove(ip);
-    }
 
     foreach (Channel *channel, client->channels())
     {
@@ -206,7 +200,8 @@ void Server::clientDisconnected()
 
     debug(tr("<i>%1 <font color='%2'><b>%3</b></font> left!</i>").arg(timestamp(), color, name.toHtmlEscaped()));
 
-    delete client;
+    client->socket()->deleteLater();
+    client->deleteLater();
 
     /*Packet p;
     p.begin(Enums::UnjoinCommand);
@@ -386,9 +381,7 @@ void Server::kick(const QString &ip)
     foreach (Client *client, m_ipMap[ip])
     {
         client->disconnected();
-        debug(ip + " (" + client->name() + ") was kicked.");
     }
-
 }
 
 void Server::ban(const QString &ip)
