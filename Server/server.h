@@ -45,6 +45,10 @@ public slots:
     void sendMessageToOne(const QString &message, Client *client, Channel *channel, const QString &name = "~Server~", const QString &color = "#000000");
     void removeChannel(Channel *channel);
     void setChatImage();
+    bool addFlood(const QString &ip);
+    void kick(const QString &ip);
+    void ban(const QString &ip);
+    void unban(const QString &ip);
 
     // command handling //
     void handleMessage(Packet p, Client *client);
@@ -63,6 +67,12 @@ private:
     QList<Channel*> m_channels;
     QHash<int, Client*> m_clientMap;
     QHash<int, Channel*> m_channelIdMap;
+    QHash<QString, int> m_floodMap;
+    QHash<QString, quint64> m_floodTimeMap;
+    QHash<QString, int> m_floodCountMap;
+    QStringList m_bans;
+    QHash<QString, QList<Client*>> m_ipMap;
+    int m_floodPenalty, m_floodLimit;
     QHash<QString, Channel*> m_channelNameMap;
     QString timestamp();
     QString m_welcomeMessage;

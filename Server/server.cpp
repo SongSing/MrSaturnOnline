@@ -3,10 +3,17 @@
 #include <QCryptographicHash>
 #include <QDateTime>
 #include <QFileDialog>
+#include <QSettings>
 
 Server::Server(const QString &name, SslMode mode, QObject *parent) :
     QWebSocketServer(name, mode, parent)
 {
+    m_floodPenalty = 50;
+    m_floodLimit = 1000;
+
+    QSettings s;
+    m_bans = s.value("bans", QStringList()).toStringList();
+
     connect(this, SIGNAL(newConnection()), this, SLOT(onNewConnection()));
 
     m_parent = (QWidget*)parent;
@@ -120,6 +127,12 @@ Channel *Server::allChannels()
 void Server::readyRead(const QString &message)
 {
     Client *client = (Client*)sender();
+
+    if (addFlood(client->ip()))
+    {
+        return;
+    }
+
     Packet p(message);
 
     Enums::Command command = (Enums::Command)p.readCommand();
@@ -163,6 +176,8 @@ void Server::clientDisconnected()
 {
     Client *client = (Client*)sender();
 
+    delete client->socket();
+
     emit userRemoved(client);
 
     QString name = client->name();
@@ -170,6 +185,14 @@ void Server::clientDisconnected()
 
     m_clients.removeAll(client);
     m_clientMap.remove(client->id());
+    QString ip = client->ip();
+
+    m_ipMap[ip].removeAll(client);
+
+    if (m_ipMap[ip].isEmpty())
+    {
+        m_ipMap.remove(ip);
+    }
 
     foreach (Channel *channel, client->channels())
     {
@@ -317,6 +340,76 @@ void Server::setChatImage()
     }
 }
 
+bool Server::addFlood(const QString &ip)
+{
+    quint64 currentTime = QDateTime::currentMSecsSinceEpoch();
+
+    if (!m_floodMap.contains(ip))
+    {
+        m_floodMap.insert(ip, 0);
+    }
+    else
+    {
+        quint64 lastTime = m_floodTimeMap[ip];
+
+        int reduce = (currentTime - lastTime) * 5 / 100;
+        m_floodMap[ip] = qMax(m_floodMap[ip] - reduce, 0);
+    }
+
+    m_floodMap[ip] += m_floodPenalty;
+    m_floodTimeMap[ip] = currentTime;
+
+    if (m_floodMap[ip] > m_floodLimit)
+    {
+        kick(ip);
+
+        if (!m_floodCountMap.contains(ip))
+        {
+            m_floodCountMap.insert(ip, 0);
+        }
+
+        m_floodCountMap[ip]++;
+
+        if (m_floodCountMap[ip] > 5)
+        {
+            ban(ip);
+        }
+
+        return true;
+    }
+
+    return false;
+}
+
+void Server::kick(const QString &ip)
+{
+    foreach (Client *client, m_ipMap[ip])
+    {
+        client->disconnected();
+        debug(ip + " (" + client->name() + ") was kicked.");
+    }
+
+}
+
+void Server::ban(const QString &ip)
+{
+    kick(ip);
+    m_bans.append(ip);
+
+    QSettings s;
+    s.setValue("bans", m_bans);
+
+    debug(ip + " was banned.");
+}
+
+void Server::unban(const QString &ip)
+{
+    m_bans.removeAll(ip);
+
+    QSettings s;
+    s.setValue("bans", m_bans);
+}
+
 // ************************************************** // command handling // ************************************************** //
 
 void Server::handleMessage(Packet p, Client *client)
@@ -446,10 +539,33 @@ QString Server::timestamp()
 
 void Server::onNewConnection()
 {
-    Client *client = new Client(this->nextPendingConnection());
+    QWebSocket *s = this->nextPendingConnection();
+    QString ip = s->peerAddress().toString();
+
+    if (m_bans.contains(ip))
+    {
+        //s->close();
+        s->deleteLater();
+        //debug("Banned user from " + ip + " was disconnected.");
+        return;
+    }
+
+    Client *client = new Client(s);
     m_clients.append(client);
 
-    debug("New client from: " + client->socket()->peerAddress().toString());
+    if (addFlood(ip))
+    {
+        return;
+    }
+
+    if (!m_ipMap.contains(ip))
+    {
+        m_ipMap.insert(ip, QList<Client*>());
+    }
+
+    m_ipMap[ip] << client;
+
+    debug("New client from: " + ip);
 
     connect(client, SIGNAL(readyRead(QString)), this, SLOT(readyRead(QString)));
     connect(client, SIGNAL(disconnected()), this, SLOT(clientDisconnected()));

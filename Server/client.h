@@ -22,6 +22,7 @@ public:
     int id();
     int sprite();
     QList<Channel*> channels();
+    QString ip();
 
     QWebSocket *socket();
 

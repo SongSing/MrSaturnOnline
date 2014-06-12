@@ -72,7 +72,22 @@ void MainWindow::sendMessage()
     {
         ui->input->clear();
 
-        m_server->sendMessageToAll(message, m_server->allChannels());
+        if (message.startsWith("/ban "))
+        {
+            m_server->ban(message.mid(5));
+        }
+        else if (message.startsWith("/unban "))
+        {
+            m_server->unban(message.mid(7));
+        }
+        else if (message.startsWith("/kick "))
+        {
+            m_server->kick(message.mid(6));
+        }
+        else
+        {
+            m_server->sendMessageToAll(message, m_server->allChannels());
+        }
     }
 }
 

@@ -53,6 +53,11 @@ QList<Channel *> Client::channels()
     return m_channels;
 }
 
+QString Client::ip()
+{
+    return m_socket->peerAddress().toString();
+}
+
 bool Client::hasChannel(Channel *channel)
 {
     return m_channels.contains(channel);
