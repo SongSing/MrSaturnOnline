@@ -20,6 +20,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(ui->start, SIGNAL(clicked()), this, SLOT(startServer()));
     connect(ui->send, SIGNAL(clicked()), this, SLOT(sendMessage()));
+    connect(ui->input, SIGNAL(returnPressed()), this, SLOT(sendMessage()));
 }
 
 MainWindow::~MainWindow()

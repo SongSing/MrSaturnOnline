@@ -114,6 +114,7 @@ void MainWindow::connected()
     p.begin(Enums::JoinCommand);
     p.write(m_name, Enums::NameLength);
     p.write(m_color, Enums::ColorLength);
+    p.write(0, Enums::SpriteLength);
     p.end();
 
     sendPacket(p);
@@ -339,10 +340,21 @@ void MainWindow::handleMessage(Packet p)
     channelId = p.readInt(Enums::ChannelIdLength);
     message = p.readString(Enums::MessageLength);
 
-    if (this->hasChannel(channelFromId(channelId)))
+    if (channelId != all.id())
     {
-        appendChannel(channelId, tr("<font color='%1'>%2 <b>%3:</b></font> %4")
-                      .arg(color, timestamp(), name.toHtmlEscaped(), message.toHtmlEscaped()));
+        if (this->hasChannel(channelFromId(channelId)))
+        {
+            appendChannel(channelId, tr("<font color='%1'>%2 <b>%3:</b></font> %4")
+                          .arg(color, timestamp(), name.toHtmlEscaped(), message.toHtmlEscaped()));
+        }
+    }
+    else
+    {
+        foreach (Channel c, m_channels)
+        {
+            appendChannel(c.id(), tr("<font color='%1'>%2 <b>%3:</b></font> %4")
+                          .arg(color, timestamp(), name.toHtmlEscaped(), message.toHtmlEscaped()));
+        }
     }
 }
 
@@ -459,6 +471,7 @@ void MainWindow::handleUserList(Packet p)
         QList<int> ids = p.readIntList(Enums::IdListLength, Enums::IdLength);
         QStringList names = p.readStringList(Enums::NameListLength, Enums::NameLength);
         QStringList colors = p.readStringList(Enums::ColorListLength, Enums::ColorLength);
+        QList<int> sprites = p.readIntList(Enums::SpriteListLength, Enums::SpriteLength);
 
         if (m_userMap.contains(channelId))
         {
@@ -491,6 +504,7 @@ void MainWindow::handleUserJoinedChannel(Packet p)
         int id = p.readInt(Enums::IdLength);
         QString name = p.readString(Enums::NameLength);
         QString color = p.readString(Enums::ColorLength);
+        int sprite = p.readInt(Enums::SpriteLength);
         m_userMap[channelId].append(User(id, name, color));
 
         if (channelId == m_currentChannelId)
@@ -518,6 +532,7 @@ void MainWindow::handleUserLeftChannel(Packet p)
         int id = p.readInt(Enums::IdLength);
         QString name = p.readString(Enums::NameLength);
         QString color = p.readString(Enums::ColorLength);
+        int sprite = p.readInt(Enums::SpriteLength);
         m_userMap[channelId].removeAll(User(id, name, color));
 
         if (channelId == m_currentChannelId)
@@ -537,8 +552,9 @@ void MainWindow::handleUserLeftChannel(Packet p)
 
 void MainWindow::handleSetChatImage(Packet p)
 {
-    QString data = p.readString(Enums::ChatImageLength);
-    ui->chats->setStyleSheet("QTextBrowser { background-image: url(data:image/png;base64," + data + "\"); background-repeat: no-repeat; background-attachment: fixed; background-position: center; background-color: white; }");
+    QImage image = p.readImage(Enums::ChatImageLength);
+    image.save(QDir::currentPath() + "/chat.png");
+    this->setStyleSheet("QTextBrowser { background-image: url(\"" + QDir::currentPath() + "/chat.png\"); background-repeat: no-repeat; background-attachment: fixed; background-position: center; background-color: white; }");
 }
 
 // ************************************************** // end command handling // ************************************************** //

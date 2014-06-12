@@ -112,19 +112,9 @@ void Channel::sendAll(const QByteArray &data)
 
 void Channel::sendOne(Client *client, const QByteArray &data)
 {
-    if (this == Channel::all())
+    if (m_clients.contains(client))
     {
-        foreach (Channel *channel, client->channels())
-        {
-            channel->sendOne(client, data);
-        }
-    }
-    else
-    {
-        if (m_clients.contains(client))
-        {
-            client->write(data);
-        }
+        client->write(data);
     }
 }
 

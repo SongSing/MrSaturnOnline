@@ -31,7 +31,7 @@ void Server::sendOne(Client *client, const QByteArray &data, Channel *channel)
 {
     if (channel == all)
     {
-        client->channels()[0]->sendOne(client, data); // handles it there
+        client->write(data);
     }
     else
     {
@@ -221,6 +221,8 @@ void Server::sendMessageToAll(const QString &message, Channel *channel, const QS
     toSend.end();
 
     sendChannel(channel, toSend.toByteArray());
+
+    debug(tr("[%1] <font color='%2'>%3 <b>%4:</b></font> %5").arg(channel->name(), color, timestamp(), name, message));
 }
 
 void Server::sendMessageToOne(const QString &message, Client *client, Channel *channel, const QString &name, const QString &color)
@@ -232,6 +234,9 @@ void Server::sendMessageToOne(const QString &message, Client *client, Channel *c
     toSend.write(channel->id(), Enums::ChannelIdLength);
     toSend.write(message, Enums::MessageLength);
     toSend.end();
+
+    debug(tr("[%1] [To %6] <font color='%2'>%3 <b>%4:</b></font> %5")
+          .arg(channel->name(), color, timestamp(), name, message, client->name()));
 
     sendOne(client, toSend.toByteArray(), channel);
 }
@@ -327,8 +332,6 @@ void Server::handleMessage(Packet p, Client *client)
 
     Channel *channel = channelFromId(channelId);
 
-    debug(tr("[%1] <font color='%2'>%3 <b>%4:</b></font> %5").arg(channel->name(), color, timestamp(), name, message));
-
     sendMessageToAll(message, channel, name, color);
 }
 
@@ -363,8 +366,6 @@ void Server::handleJoin(Packet p, Client *client)
     // expecting name, color, sprite //
     QString name, color;
     int id, sprite;
-
-    debug(p);
 
     name = p.readString(Enums::NameLength);
     color = p.readString(Enums::ColorLength);
