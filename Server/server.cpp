@@ -450,17 +450,19 @@ void Server::handleImage(Packet p, Client *client)
 void Server::handleDraw(Packet p, Client *client)
 {
     QString color;
-    int x, y;
+    int x1, y1, x2, y2;
 
     color = p.readString(Enums::ColorLength);
-    x = p.readInt(Enums::NumberLength);
-    y = p.readInt(Enums::NumberLength);
+    x1 = p.readInt(Enums::NumberLength);
+    y2 = p.readInt(Enums::NumberLength);
 
     Packet s;
     s.begin(Enums::DrawCommand);
     s.write(color, Enums::ColorLength);
-    s.write(x, Enums::NumberLength);
-    s.write(y, Enums::NumberLength);
+    s.write(x1, Enums::NumberLength);
+    s.write(y1, Enums::NumberLength);
+    s.write(x2, Enums::NumberLength);
+    s.write(y2, Enums::NumberLength);
     s.end();
 
     sendAll(s.toByteArray());
