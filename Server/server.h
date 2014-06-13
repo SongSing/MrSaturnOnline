@@ -53,6 +53,7 @@ public slots:
     // command handling //
     void handleMessage(Packet p, Client *client);
     void handleImage(Packet p, Client *client);
+    void handleDraw(Packet p, Client *client);
     void handleJoin(Packet p, Client *client);
     void handleUnjoin(Packet p, Client *client);
     void handleJoinChannel(Packet p, Client *client);

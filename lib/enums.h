@@ -22,7 +22,8 @@ public:
         RemoveChannelCommand = 0x0B,
         SetChatImageCommand = 0x0C,
         ImageCommand = 0x0D,
-        InfoCommand = 0x0E
+        InfoCommand = 0x0E,
+        DrawCommand = 0x0F
     };
 
     enum Length // number of bits
@@ -42,7 +43,8 @@ public:
         ChatImageLength = 16,
         ImageLength = 16,
         SpriteLength = 2,
-        SpriteListLength = 8
+        SpriteListLength = 8,
+        NumberLength = 4
     };
 };
 
