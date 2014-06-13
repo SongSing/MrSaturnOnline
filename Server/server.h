@@ -64,6 +64,7 @@ public slots:
     void onNewConnection();
 
 private:
+    QString m_drawBoard;
     QList<Client*> m_clients;
     QList<Channel*> m_channels;
     QHash<int, Client*> m_clientMap;
