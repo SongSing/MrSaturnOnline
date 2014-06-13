@@ -34,7 +34,7 @@ signals:
 
 public slots:
     void sendAll(const QByteArray &data);
-    void sendOne(Client *client, const QByteArray &data, Channel *channel = Channel::all());
+    void sendOne(Client *client, const QByteArray &data, Channel *channel);
     void sendChannel(Channel *channel, const QByteArray &data);
     void setWelcomeMessage(const QString &message);
     void readyRead(const QString &message);
@@ -54,6 +54,7 @@ public slots:
     void handleImage(Packet p, Client *client);
     void handleDraw(Packet p, Client *client);
     void handleClear(Packet p, Client *client);
+    void handleBoardData(Packet p, Client *client);
     void handleJoin(Packet p, Client *client);
     void handleUnjoin(Packet p, Client *client);
     void handleJoinChannel(Packet p, Client *client);

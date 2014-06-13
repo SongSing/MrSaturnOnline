@@ -24,7 +24,9 @@ public:
         ImageCommand = 0x0D,
         InfoCommand = 0x0E,
         DrawCommand = 0x0F,
-        ClearCommand = 0x10
+        ClearCommand = 0x10,
+        RequestBoardCommand = 0x11,
+        BoardDataCommand = 0x12
     };
 
     enum Length // number of bits
