@@ -4,12 +4,14 @@
 #include <QDateTime>
 #include <QFileDialog>
 #include <QSettings>
+#include <QTimer>
 
 Server::Server(const QString &name, SslMode mode, QObject *parent) :
     QWebSocketServer(name, mode, parent)
 {
     m_floodPenalty = 50;
     m_floodLimit = 1000;
+    m_drawBoard = "";
 
     QSettings s;
     m_bans = s.value("bans", QStringList()).toStringList();
@@ -24,6 +26,24 @@ Server::Server(const QString &name, SslMode mode, QObject *parent) :
 
     createChannel("Saturn Valley", true);
     createChannel("Saturn Hot Springs", true);
+
+    QTimer *reqTimer = new QTimer();
+    reqTimer->setInterval(600000);
+
+    connect(reqTimer, &QTimer::timeout, [=]()
+    {
+        if (m_clients.length() > 0)
+        {
+            Packet req;
+            req.begin(Enums::RequestBoardCommand);
+            req.write(-1, Enums::IdLength);
+            req.end();
+
+            sendOne(m_clients[0], req.toByteArray(), all);
+        }
+    });
+
+    reqTimer->start(600000);
 }
 
 void Server::sendAll(const QByteArray &data)
@@ -496,12 +516,17 @@ void Server::handleBoardData(Packet p, Client *client)
     QString data = p.readString(Enums::ImageLength);
     int id = p.readInt(Enums::IdLength);
 
-    Packet s;
-    s.begin(Enums::BoardDataCommand);
-    s.write(data, Enums::ImageLength);
-    s.end();
+    m_drawBoard = data;
 
-    sendOne(m_clientMap[id], s.toByteArray(), all);
+    if (m_clientMap.contains(id))
+    {
+        Packet s;
+        s.begin(Enums::BoardDataCommand);
+        s.write(data, Enums::ImageLength);
+        s.end();
+
+        sendOne(m_clientMap[id], s.toByteArray(), all);
+    }
 }
 
 void Server::handleJoin(Packet p, Client *client)
@@ -535,6 +560,15 @@ void Server::handleJoin(Packet p, Client *client)
         req.end();
 
         sendOne(m_clients[0], req.toByteArray(), all);
+    }
+    else if (m_drawBoard != "")
+    {
+        Packet b;
+        b.begin(Enums::BoardDataCommand);
+        b.write(m_drawBoard, Enums::ImageLength);
+        b.end();
+
+        sendOne(client, b.toByteArray(), all);
     }
 
     debug(tr("<i>%1 <font color='%2'><b>%3</b></font> joined!</i>").arg(timestamp(), color, name.toHtmlEscaped()));
