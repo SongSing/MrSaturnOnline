@@ -173,7 +173,10 @@ void Server::readyRead(const QString &message)
     {
         handleDraw(p, client);
     }
-
+    else if (command == Enums::ClearCommand)
+    {
+        handleClear(p, client);
+    }
 }
 
 void Server::clientDisconnected()
@@ -449,11 +452,15 @@ void Server::handleImage(Packet p, Client *client)
 
 void Server::handleDraw(Packet p, Client *client)
 {
+
     QString color;
+
     int x1, y1, x2, y2;
 
     color = p.readString(Enums::ColorLength);
     x1 = p.readInt(Enums::NumberLength);
+    y1 = p.readInt(Enums::NumberLength);
+    x2 = p.readInt(Enums::NumberLength);
     y2 = p.readInt(Enums::NumberLength);
 
     Packet s;
@@ -463,6 +470,18 @@ void Server::handleDraw(Packet p, Client *client)
     s.write(y1, Enums::NumberLength);
     s.write(x2, Enums::NumberLength);
     s.write(y2, Enums::NumberLength);
+    s.end();
+
+    sendAll(s.toByteArray());
+}
+
+void Server::handleClear(Packet p, Client *client)
+{
+    Packet s;
+    s.begin(Enums::ClearCommand);
+    s.write(client->id(), Enums::IdLength);
+    s.write(client->name(), Enums::NameLength);
+    s.write(client->color(), Enums::ColorLength);
     s.end();
 
     sendAll(s.toByteArray());

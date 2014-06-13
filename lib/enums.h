@@ -23,7 +23,8 @@ public:
         SetChatImageCommand = 0x0C,
         ImageCommand = 0x0D,
         InfoCommand = 0x0E,
-        DrawCommand = 0x0F
+        DrawCommand = 0x0F,
+        ClearCommand = 0x10
     };
 
     enum Length // number of bits
