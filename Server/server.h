@@ -39,7 +39,6 @@ public slots:
     void setWelcomeMessage(const QString &message);
     void readyRead(const QString &message);
     void clientDisconnected();
-    void sendUserList();
     void sendChannelList();
     void sendMessageToAll(const QString &message, Channel *channel, const QString &name = "~Server~", const QString &color = "#000000");
     void sendMessageToOne(const QString &message, Client *client, Channel *channel, const QString &name = "~Server~", const QString &color = "#000000");
@@ -53,6 +52,7 @@ public slots:
     // command handling //
     void handleMessage(Packet p, Client *client);
     void handleImage(Packet p, Client *client);
+    void handleDraw(Packet p, Client *client);
     void handleJoin(Packet p, Client *client);
     void handleUnjoin(Packet p, Client *client);
     void handleJoinChannel(Packet p, Client *client);

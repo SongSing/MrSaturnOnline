@@ -128,14 +128,14 @@ void Server::readyRead(const QString &message)
 {
     Client *client = (Client*)sender();
 
-    if (addFlood(client->ip()))
-    {
-        return;
-    }
-
     Packet p(message);
 
     Enums::Command command = (Enums::Command)p.readCommand();
+
+    if (command != Enums::DrawCommand && addFlood(client->ip()))
+    {
+        return;
+    }
 
     if (command == Enums::MessageCommand)
     {
@@ -169,6 +169,10 @@ void Server::readyRead(const QString &message)
     {
         handleRemoveChannel(p, client);
     }
+    else if (command == Enums::DrawCommand)
+    {
+        handleDraw(p, client);
+    }
 
 }
 
@@ -200,6 +204,7 @@ void Server::clientDisconnected()
 
     debug(tr("<i>%1 <font color='%2'><b>%3</b></font> left!</i>").arg(timestamp(), color, name.toHtmlEscaped()));
 
+    client->socket()->close();
     client->socket()->deleteLater();
     client->deleteLater();
 
@@ -211,11 +216,6 @@ void Server::clientDisconnected()
 
     sendAll(p.toByteArray());
     sendUserList();*/
-}
-
-void Server::sendUserList()
-{
-
 }
 
 void Server::sendChannelList()
@@ -445,6 +445,25 @@ void Server::handleImage(Packet p, Client *client)
 
     debug(tr("[%1] <font color='%2'>%3 <b>%4:</b></font> %5")
           .arg(channel->name(), color, timestamp(), name.toHtmlEscaped(), message.replace("[", "<").replace("]", ">")));
+}
+
+void Server::handleDraw(Packet p, Client *client)
+{
+    QString color;
+    int x, y;
+
+    color = p.readString(Enums::ColorLength);
+    x = p.readInt(Enums::NumberLength);
+    y = p.readInt(Enums::NumberLength);
+
+    Packet s;
+    s.begin(Enums::DrawCommand);
+    s.write(color, Enums::ColorLength);
+    s.write(x, Enums::NumberLength);
+    s.write(y, Enums::NumberLength);
+    s.end();
+
+    sendAll(s.toByteArray());
 }
 
 void Server::handleJoin(Packet p, Client *client)
