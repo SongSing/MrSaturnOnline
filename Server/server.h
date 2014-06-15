@@ -48,9 +48,11 @@ public slots:
     void kick(const QString &ip);
     void ban(const QString &ip);
     void unban(const QString &ip);
+    void error();
 
     // command handling //
     void handleMessage(Packet p, Client *client);
+    void handlePM(Packet p, Client *client);
     void handleImage(Packet p, Client *client);
     void handleDraw(Packet p, Client *client);
     void handleClear(Packet p, Client *client);
@@ -69,6 +71,7 @@ private:
     QList<Client*> m_clients;
     QList<Channel*> m_channels;
     QHash<int, Client*> m_clientMap;
+    QHash<QString, Client*> m_clientNameMap;
     QHash<int, Channel*> m_channelIdMap;
     QHash<QString, int> m_floodMap;
     QHash<QString, quint64> m_floodTimeMap;

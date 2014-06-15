@@ -11,10 +11,10 @@ Server::Server(const QString &name, SslMode mode, QObject *parent) :
 {
     m_floodPenalty = 50;
     m_floodLimit = 1000;
-    m_drawBoard = "";
 
     QSettings s;
     m_bans = s.value("bans", QStringList()).toStringList();
+    m_drawBoard = s.value("drawBoard", "").toString();
 
     connect(this, SIGNAL(newConnection()), this, SLOT(onNewConnection()));
 
@@ -28,7 +28,7 @@ Server::Server(const QString &name, SslMode mode, QObject *parent) :
     createChannel("Saturn Hot Springs", true);
 
     QTimer *reqTimer = new QTimer();
-    reqTimer->setInterval(600000);
+    reqTimer->setInterval(1800000);
 
     connect(reqTimer, &QTimer::timeout, [=]()
     {
@@ -43,7 +43,7 @@ Server::Server(const QString &name, SslMode mode, QObject *parent) :
         }
     });
 
-    reqTimer->start(600000);
+    reqTimer->start(1800000);
 }
 
 void Server::sendAll(const QByteArray &data)
@@ -201,6 +201,10 @@ void Server::readyRead(const QString &message)
     {
         handleBoardData(p, client);
     }
+    else if (command == Enums::PMCommand)
+    {
+        handlePM(p, client);
+    }
 }
 
 void Server::clientDisconnected()
@@ -216,6 +220,7 @@ void Server::clientDisconnected()
 
     m_clients.removeAll(client);
     m_clientMap.remove(client->id());
+    m_clientNameMap.remove(name);
 
     m_ipMap[ip].removeAll(client);
 
@@ -430,6 +435,11 @@ void Server::unban(const QString &ip)
     s.setValue("bans", m_bans);
 }
 
+void Server::error()
+{
+    debug("<b color='red'>" + ((QWebSocket*)sender())->errorString() + "</b>");
+}
+
 // ************************************************** // command handling // ************************************************** //
 
 void Server::handleMessage(Packet p, Client *client)
@@ -446,6 +456,24 @@ void Server::handleMessage(Packet p, Client *client)
     Channel *channel = channelFromId(channelId);
 
     sendMessageToAll(message, channel, name, color);
+}
+
+void Server::handlePM(Packet p, Client *client)
+{
+    // expecting id, message //
+    int id;
+    QString message;
+
+    id = p.readInt(Enums::IdLength);
+    message = p.readString(Enums::MessageLength);
+
+    Packet s;
+    s.begin(Enums::PMCommand);
+    s.write(client->id(), Enums::IdLength);
+    s.write(message, Enums::MessageLength);
+    s.end();
+
+    sendOne(m_clientMap[id], s.toByteArray(), all);
 }
 
 void Server::handleImage(Packet p, Client *client)
@@ -517,6 +545,8 @@ void Server::handleBoardData(Packet p, Client *client)
     int id = p.readInt(Enums::IdLength);
 
     m_drawBoard = data;
+    QSettings s;
+    s.setValue("drawBoard", data);
 
     if (m_clientMap.contains(id))
     {
@@ -542,6 +572,7 @@ void Server::handleJoin(Packet p, Client *client)
 
     client->setInfo(id, name, color, sprite);
     m_clientMap.insert(id, client);
+    m_clientNameMap.insert(name, client);
 
     client->sendChannels(m_channels);
 
@@ -664,6 +695,7 @@ void Server::onNewConnection()
 
     connect(client, SIGNAL(readyRead(QString)), this, SLOT(readyRead(QString)));
     connect(client, SIGNAL(disconnected()), this, SLOT(clientDisconnected()));
+    connect(s, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(error()));
 }
 
 Channel *Server::channelFromId(int id)
