@@ -17,6 +17,7 @@ public:
     void write(const double &number, int bits);
     void write(const QStringList &list, int bits, int bitsPerItem);
     void write(const QList<int> &list, int bits, int bitsPerItem);
+    void write(const QImage &image, int bits);
     void writeImage(const QString &fileName, int bits);
     void end();
 

@@ -17,12 +17,15 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     channel.cpp \
     user.cpp \
-    ../lib/packet.cpp
+    ../lib/packet.cpp \
+    drawboard.cpp
 
 HEADERS  += mainwindow.h \
     channel.h \
     user.h \
-    ../lib/packet.h
+    ../lib/packet.h \
+    drawboard.h
 
-FORMS    += mainwindow.ui
+FORMS    += mainwindow.ui \
+    drawboard.ui
 

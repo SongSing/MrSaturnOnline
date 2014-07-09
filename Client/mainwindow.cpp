@@ -3,6 +3,7 @@
 
 #include <QColorDialog>
 #include <QTextBrowser>
+#include "drawboard.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -33,6 +34,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionExit, SIGNAL(triggered()), this, SLOT(close()));
     connect(ui->chats, SIGNAL(tabCloseRequested(int)), this, SLOT(leaveChannel(int)));
     connect(ui->joinChannel, SIGNAL(clicked()), this, SLOT(createChannel()));
+    connect(ui->drawBoard, SIGNAL(sendPacket(Packet)), this, SLOT(sendPacket(Packet)));
+
 }
 
 MainWindow::~MainWindow()
@@ -72,6 +75,8 @@ void MainWindow::connectToServer()
     m_name = ui->name->text();
     m_port = ui->port->value();
     m_host = ui->host->text();
+
+    ui->drawBoard->giveColor(m_color);
 
     initialChat = new QTextBrowser();
     ui->chats->addTab(initialChat, m_host);
@@ -173,6 +178,22 @@ void MainWindow::readyRead(const QString &message)
     else if (command == Enums::SetChatImageCommand)
     {
         handleSetChatImage(p);
+    }
+    else if (command == Enums::DrawCommand)
+    {
+        handleDraw(p);
+    }
+    else if (command == Enums::ClearCommand)
+    {
+        handleClear(p);
+    }
+    else if (command == Enums::RequestBoardCommand)
+    {
+        handleRequestBoard(p);
+    }
+    else if (command == Enums::BoardDataCommand)
+    {
+        handleBoardData(p);
     }
 }
 
@@ -555,6 +576,54 @@ void MainWindow::handleSetChatImage(Packet p)
     QImage image = p.readImage(Enums::ChatImageLength);
     image.save(QDir::currentPath() + "/chat.png");
     this->setStyleSheet("QTextBrowser { background-image: url(\"" + QDir::currentPath() + "/chat.png\"); background-repeat: no-repeat; background-attachment: fixed; background-position: center; background-color: white; }");
+}
+
+void MainWindow::handleDraw(Packet p)
+{
+    // expecting color, points
+
+    QString color = p.readString(Enums::ColorLength);
+    int x1 = p.readInt(Enums::NumberLength);
+    int y1 = p.readInt(Enums::NumberLength);
+    int x2 = p.readInt(Enums::NumberLength);
+    int y2 = p.readInt(Enums::NumberLength);
+
+    ui->drawBoard->draw(color, x1, y1, x2, y2);
+}
+
+void MainWindow::handleClear(Packet p)
+{
+    // expecting id, name, color
+    int id = p.readInt(Enums::IdLength);
+    QString name = p.readString(Enums::NameLength);
+    QString color = p.readString(Enums::ColorLength);
+
+    ui->drawBoard->clear();
+    appendChat(QString("<i><span style='color:%1'><b>%2</b></span> cleared the drawing board!</i>").arg(color, name));
+}
+
+void MainWindow::handleRequestBoard(Packet p)
+{
+    // expecting id
+    int id = p.readInt(Enums::IdLength);
+
+    Packet d;
+    d.begin(Enums::BoardDataCommand);
+    d.write(ui->drawBoard->image(), Enums::ImageLength);
+    d.write(id, Enums::IdLength);
+    d.end();
+
+    appendChat(d);
+
+    sendPacket(d);
+}
+
+void MainWindow::handleBoardData(Packet p)
+{
+    // expecting image
+    QImage image = p.readImage(Enums::ImageLength);
+
+    ui->drawBoard->drawImage(image);
 }
 
 // ************************************************** // end command handling // ************************************************** //

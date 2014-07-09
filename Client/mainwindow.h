@@ -58,6 +58,10 @@ public slots:
     void handleUserJoinedChannel(Packet p);
     void handleUserLeftChannel(Packet p);
     void handleSetChatImage(Packet p);
+    void handleDraw(Packet p);
+    void handleClear(Packet p);
+    void handleRequestBoard(Packet p);
+    void handleBoardData(Packet p);
 
 private:
     Ui::MainWindow *ui;
