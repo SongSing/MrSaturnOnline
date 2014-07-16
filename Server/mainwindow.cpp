@@ -58,18 +58,6 @@ void MainWindow::startServer()
     if (m_server->listen(QHostAddress(ui->host->text()), ui->port->value()))
     {
         appendChat("<b>Started Server!</b> Listening on " + ui->host->text() + ", port " + ui->port->text());
-
-        QStringList ips;
-
-        foreach (QHostAddress h, QNetworkInterface::allAddresses())
-        {
-            if (!h.toString().endsWith(".1"))
-            {
-                ips << h.toString();
-            }
-        }
-
-        appendChat("Your host addresses are: <b>" + ips.join("</b>, <b>") + "</b>");
     }
     else
     {
