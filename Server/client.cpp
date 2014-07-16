@@ -127,7 +127,8 @@ void Client::sendChannels(QList<Channel *> channels)
 
 void Client::write(const QByteArray &data)
 {
-    m_socket->sendTextMessage(QString(data));
+    if (this != NULL && this->socket() != NULL)
+        m_socket->sendTextMessage(QString(data));
 }
 
 void Client::socketReadyRead(const QString &message)

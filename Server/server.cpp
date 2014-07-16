@@ -43,7 +43,7 @@ Server::Server(const QString &name, SslMode mode, QObject *parent) :
         }
     });
 
-    reqTimer->start(1800000);
+    //reqTimer->start(1800000);
 }
 
 void Server::sendAll(const QByteArray &data)
@@ -56,6 +56,9 @@ void Server::sendAll(const QByteArray &data)
 
 void Server::sendOne(Client *client, const QByteArray &data, Channel *channel)
 {
+    if (client == NULL)
+            return;
+
     if (channel == all)
     {
         client->write(data);
@@ -217,6 +220,7 @@ void Server::clientDisconnected()
 
     QString name = client->name();
     QString color = client->color();
+    int id = client->id();
 
     m_clients.removeAll(client);
     m_clientMap.remove(client->id());
@@ -240,14 +244,12 @@ void Server::clientDisconnected()
     client->socket()->deleteLater();
     client->deleteLater();
 
-    /*Packet p;
+    Packet p;
     p.begin(Enums::UnjoinCommand);
-    p.write(name, Enums::NameLength);
-    p.write(color, Enums::ColorLength);
+    p.write(id, Enums::IdLength);
     p.end();
 
     sendAll(p.toByteArray());
-    sendUserList();*/
 }
 
 void Server::sendChannelList()
@@ -579,6 +581,13 @@ void Server::handleJoin(Packet p, Client *client)
     this->defaultChannel()->addClient(client);
 
     emit userAdded(client);
+
+    Packet s;
+    s.begin(Enums::JoinCommand);
+    s.write(id, Enums::IdLength);
+    s.end();
+
+    sendAll(s.toByteArray());
 
     sendMessageToOne(m_welcomeMessage, client, all, "Welcome Message", "#0000FF");
 
